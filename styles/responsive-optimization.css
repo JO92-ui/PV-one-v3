@@ -1,0 +1,630 @@
+/* ===================================================================
+   OPTIMIZACIÓN RESPONSIVE PARA PV-ONE v3 LITE
+   Optimizado para PC/Laptop, iPad y iPhone
+   =================================================================== */
+
+/* ===================================================================
+   VARIABLES CSS PERSONALIZADAS PARA DIFERENTES DISPOSITIVOS
+   =================================================================== */
+:root {
+  /* Espaciado adaptativo */
+  --container-padding-desktop: 16px 20px;
+  --container-padding-tablet: 12px 16px;
+  --container-padding-mobile: 8px 12px;
+  
+  /* Tamaños de fuente responsivos */
+  --font-size-base-desktop: 16px;
+  --font-size-base-tablet: 15px;
+  --font-size-base-mobile: 14px;
+  
+  /* Alturas mínimas para gráficos */
+  --plot-height-desktop: 640px;
+  --plot-height-tablet: 480px;
+  --plot-height-mobile: 360px;
+  
+  /* Grid gaps */
+  --grid-gap-desktop: 16px;
+  --grid-gap-tablet: 12px;
+  --grid-gap-mobile: 8px;
+  
+  /* Tamaños de botones táctiles */
+  --touch-target-size: 44px;
+  --touch-target-size-small: 36px;
+}
+
+/* ===================================================================
+   BASE STYLES - APLICABLE A TODOS LOS DISPOSITIVOS
+   =================================================================== */
+
+/* Mejor scrolling en dispositivos táctiles */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevenir zoom accidental en inputs en iOS */
+input, select, textarea {
+  font-size: 16px !important;
+  transform: translateZ(0); /* Acelerar hardware en móviles */
+}
+
+/* Mejorar tap highlights */
+button, .btn, .tab, select, input[type="checkbox"], input[type="radio"] {
+  -webkit-tap-highlight-color: rgba(31, 111, 255, 0.15);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ===================================================================
+   DESKTOP / PC - PANTALLAS GRANDES (1200px+)
+   =================================================================== */
+@media (min-width: 1200px) {
+  html, body {
+    font-size: var(--font-size-base-desktop);
+  }
+  
+  .container {
+    padding: var(--container-padding-desktop);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  /* Grid de 2 columnas optimizado para desktop */
+  .grid {
+    grid-template-columns: 2.2fr 1fr;
+    gap: var(--grid-gap-desktop);
+  }
+  
+  /* PV Plot más grande en desktop */
+  #plotPV, #clinicPVPlot {
+    min-height: var(--plot-height-desktop);
+  }
+  
+  /* Gauges en 6 columnas para pantallas grandes */
+  .gaugeGrid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+  }
+  
+  /* Header con más espacio */
+  .top-header {
+    height: 70px;
+    padding: 0 24px;
+  }
+  
+  body {
+    padding-top: 74px;
+  }
+  
+  /* Timepoint cards en múltiples columnas */
+  .tpWrap {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  /* Clinic grid optimizado para desktop */
+  .clinic-grid {
+    grid-template-columns: 380px 1fr;
+    grid-template-areas: 
+      'left main'
+      'alarms main';
+    gap: 18px;
+  }
+}
+
+/* ===================================================================
+   LAPTOP / DESKTOP MEDIANOS (992px - 1199px)
+   =================================================================== */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .container {
+    padding: var(--container-padding-tablet);
+  }
+  
+  .grid {
+    grid-template-columns: 2fr 1fr;
+    gap: var(--grid-gap-tablet);
+  }
+  
+  .gaugeGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  #plotPV, #clinicPVPlot {
+    min-height: 580px;
+  }
+}
+
+/* ===================================================================
+   TABLET / iPad - ORIENTACIÓN LANDSCAPE (768px - 1024px)
+   =================================================================== */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  html, body {
+    font-size: var(--font-size-base-tablet);
+  }
+  
+  .container {
+    padding: var(--container-padding-tablet);
+  }
+  
+  /* Mantener 2 columnas en landscape pero más compacto */
+  .grid {
+    grid-template-columns: 1.8fr 1fr;
+    gap: var(--grid-gap-tablet);
+  }
+  
+  .gaugeGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  
+  .gaugeGrid > div {
+    min-height: 200px;
+  }
+  
+  #plotPV, #clinicPVPlot {
+    min-height: var(--plot-height-tablet);
+  }
+  
+  /* Header más compacto */
+  .top-header {
+    height: 60px;
+  }
+  
+  body {
+    padding-top: 64px;
+  }
+  
+  /* Ocultar subtitle en landscape para ahorrar espacio */
+  .brand-text .subtitle {
+    display: none;
+  }
+  
+  /* Botones más compactos */
+  .btn {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+  
+  .tab {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+}
+
+/* ===================================================================
+   TABLET / iPad - ORIENTACIÓN PORTRAIT (768px - 1024px)
+   =================================================================== */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* Layout de una sola columna en portrait */
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--grid-gap-tablet);
+  }
+  
+  .clinic-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: 
+      'left'
+      'main'
+      'alarms' !important;
+    gap: var(--grid-gap-tablet);
+  }
+  
+  /* Gráficos más compactos */
+  #plotPV, #clinicPVPlot {
+    min-height: 420px;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Gauges en 2 columnas */
+  .gaugeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Timepoints en una columna */
+  .tpWrap {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Ajustar patient info para portrait */
+  .metaRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .metaField {
+    width: 100%;
+  }
+  
+  .metaField input, .metaField select {
+    width: 100%;
+  }
+}
+
+/* ===================================================================
+   MÓVIL / iPhone - PANTALLAS PEQUEÑAS (menos de 768px)
+   =================================================================== */
+@media (max-width: 767px) {
+  html, body {
+    font-size: var(--font-size-base-mobile);
+  }
+  
+  .container {
+    padding: var(--container-padding-mobile);
+  }
+  
+  /* Todo en una columna en móvil */
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--grid-gap-mobile);
+  }
+  
+  .clinic-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: 
+      'left'
+      'main'
+      'alarms' !important;
+    gap: var(--grid-gap-mobile);
+  }
+  
+  /* Header móvil compacto */
+  .top-header {
+    height: 56px;
+    padding: 0 12px;
+  }
+  
+  body {
+    padding-top: 60px;
+  }
+  
+  .logo {
+    height: 36px !important;
+  }
+  
+  .title {
+    font-size: 14px !important;
+  }
+  
+  .subtitle {
+    display: none !important;
+  }
+  
+  /* Tabs como dropdown en móvil */
+  .tabs {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .tab {
+    width: 100%;
+    text-align: center;
+    padding: var(--touch-target-size-small) 12px;
+    margin: 2px 0;
+  }
+  
+  /* Botones táctiles más grandes */
+  .btn {
+    min-height: var(--touch-target-size);
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  
+  input, select, textarea {
+    min-height: var(--touch-target-size);
+    padding: 12px;
+    font-size: 16px !important; /* Evitar zoom en iOS */
+  }
+  
+  /* Gráficos móviles compactos */
+  #plotPV, #clinicPVPlot {
+    min-height: var(--plot-height-mobile);
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+    width: calc(100vw - 24px) !important;
+  }
+  
+  /* Una sola columna de gauges */
+  .gaugeGrid {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+  
+  .gaugeGrid > div {
+    min-height: 180px;
+  }
+  
+  /* Timepoint cards compactas */
+  .tpWrap {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .tpCard {
+    padding: 8px;
+  }
+  
+  /* Patient info en columna */
+  .row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  
+  .metaRow {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .metaField {
+    width: 100%;
+  }
+  
+  .metaField input, .metaField select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* CS Type buttons en columna */
+  #csTypeGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  #csTypeGroup label {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  
+  /* Variables más compactas */
+  .clinic-theme .variable-category {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .clinic-theme .variable-category h4 {
+    border-right: 0;
+    border-bottom: 1px solid rgba(14,165,164,0.06);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .clinic-theme .variable-list {
+    padding-left: 0;
+    padding-top: 8px;
+  }
+  
+  /* Tablas con scroll horizontal */
+  table {
+    font-size: 12px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  th, td {
+    padding: 6px 8px;
+    min-width: 80px;
+  }
+  
+  /* Modal full-screen en móvil */
+  .modal-content {
+    width: 95% !important;
+    max-width: none !important;
+    margin: 2% auto !important;
+    max-height: 96vh;
+    overflow-y: auto;
+  }
+}
+
+/* ===================================================================
+   MÓVIL MUY PEQUEÑO (menos de 480px)
+   =================================================================== */
+@media (max-width: 479px) {
+  .container {
+    padding: 6px 8px;
+  }
+  
+  .card {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  h2 {
+    font-size: 16px;
+  }
+  
+  h3 {
+    font-size: 14px;
+  }
+  
+  /* Gráficos full-width */
+  #plotPV, #clinicPVPlot {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+    width: calc(100vw - 16px) !important;
+    min-height: 320px;
+  }
+  
+  /* Botones de acción apilados */
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Chips más pequeños */
+  .pill {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+  
+  .chip {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
+
+/* ===================================================================
+   MEJORAS ESPECÍFICAS PARA DISPOSITIVOS TÁCTILES
+   =================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Mejorar interacción táctil */
+  .btn, .tab, select, input, .variable-item, .template-card {
+    min-height: var(--touch-target-size);
+    min-width: var(--touch-target-size);
+  }
+  
+  /* Espaciado mejorado para toques */
+  .gaugeGrid {
+    gap: 12px;
+  }
+  
+  /* Scroll suave */
+  .summaryBox, .variable-list, .condition-row {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mejor feedback visual */
+  .btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  .tab:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* ===================================================================
+   OPTIMIZACIONES PARA RENDIMIENTO EN MÓVILES
+   =================================================================== */
+@media (max-width: 1024px) {
+  /* Reducir animaciones costosas */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* Simplificar sombras para mejorar rendimiento */
+  .card, .tpCard, .modal-content {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  }
+  
+  /* Reducir efectos de desenfoque */
+  .popover {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ===================================================================
+   ACCESIBILIDAD Y FOCUS STATES MEJORADOS
+   =================================================================== */
+@media (max-width: 1024px) {
+  /* Focus más visible en dispositivos táctiles */
+  button:focus-visible,
+  .btn:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid #1f6fff !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 6px rgba(31, 111, 255, 0.2) !important;
+  }
+  
+  /* Mejor contraste para texto pequeño */
+  .small {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+  }
+}
+
+/* ===================================================================
+   THEME DARK MODE ESPECÍFICO PARA MÓVILES
+   =================================================================== */
+@media (max-width: 1024px) {
+  body.dark {
+    /* Colores menos saturados para pantallas pequeñas */
+    --dark-text: #f1f5f9;
+    --dark-muted: #94a3b8;
+    --dark-panel: #1e293b;
+    --dark-bg: #0f172a;
+  }
+  
+  /* Mejor contraste en móvil dark mode */
+  body.dark .card,
+  body.dark .tpCard {
+    border: 1px solid #334155 !important;
+    background: var(--dark-panel) !important;
+  }
+  
+  body.dark .btn {
+    border: 1px solid #475569 !important;
+  }
+}
+
+/* ===================================================================
+   FIXES ESPECÍFICOS PARA iOS SAFARI
+   =================================================================== */
+@supports (-webkit-appearance: none) {
+  /* Fix para height inconsistente en iOS */
+  input, select, textarea, .btn {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  /* Fix para viewport height en iOS */
+  @media (max-width: 1024px) {
+    .modal {
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+  }
+  
+  /* Prevenir bounce scroll en iOS */
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ===================================================================
+   PRINT STYLES - PARA REPORTES
+   =================================================================== */
+@media print {
+  .top-header,
+  .tabs,
+  .action-buttons,
+  .btn,
+  button {
+    display: none !important;
+  }
+  
+  body {
+    padding-top: 0 !important;
+    font-size: 12px !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
