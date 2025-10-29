@@ -1,0 +1,13 @@
+{
+  "name": "pv-one",
+  "version": "3.0.0",
+  "description": "PV Loops - PWA Edition (works offline in any browser including iPad)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.2.0"
+  },
+  "dependencies": {}
+}

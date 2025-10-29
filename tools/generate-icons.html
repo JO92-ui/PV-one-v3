@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PV-One — Icon Generator</title>
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding:20px;}
+    .row{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start}
+    .card{border:1px solid #e5e7eb; border-radius:10px; padding:14px;}
+    canvas{background:#002b5c; border-radius:20%}
+    button{padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; cursor:pointer}
+    button.primary{background:#1f6fff; color:#fff; border-color:#1f6fff}
+    .small{color:#64748b; font-size:13px}
+    label{display:inline-flex; align-items:center; gap:8px}
+    input[type="color"]{width:40px; height:24px; padding:0; border:1px solid #cbd5e1; border-radius:6px}
+  </style>
+</head>
+<body>
+  <h1>PV-One — Icon Generator</h1>
+  <p class="small">This helper renders <code>Logo-ITAMEX.svg</code> into PNG icons for PWA/iOS. Run in a desktop browser, then click Download for each size and place the files in the project root.</p>
+
+  <div style="margin:10px 0 16px">
+    <label>Background color <input type="color" id="bg" value="#002b5c"></label>
+    <label>Padding (%) <input type="number" id="pad" value="10" min="0" max="40" step="1" style="width:80px"></label>
+    <button id="btnRender">Render</button>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>apple-touch-icon.png (180x180)</h3>
+      <canvas id="c180" width="180" height="180"></canvas>
+      <div style="margin-top:8px"><button data-target="c180" data-name="apple-touch-icon.png" class="primary">Download</button></div>
+    </div>
+    <div class="card">
+      <h3>icon-192.png (192x192)</h3>
+      <canvas id="c192" width="192" height="192"></canvas>
+      <div style="margin-top:8px"><button data-target="c192" data-name="icon-192.png" class="primary">Download</button></div>
+    </div>
+    <div class="card">
+      <h3>icon-512.png (512x512)</h3>
+      <canvas id="c512" width="512" height="512"></canvas>
+      <div style="margin-top:8px"><button data-target="c512" data-name="icon-512.png" class="primary">Download</button></div>
+    </div>
+  </div>
+
+  <script>
+  async function loadSVG() {
+    const resp = await fetch('../Logo-ITAMEX.svg');
+    const svgText = await resp.text();
+    const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(svgBlob);
+    return new Promise((resolve)=>{
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.src = url;
+    });
+  }
+
+  function drawToCanvas(canvas, img, bg, padPct){
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas;
+    ctx.clearRect(0,0,width,height);
+    // background
+    ctx.fillStyle = bg; ctx.fillRect(0,0,width,height);
+    // padded draw
+    const pad = Math.round(Math.min(width, height) * (padPct/100));
+    const w = width - pad*2;
+    const h = height - pad*2;
+    // preserve aspect by fitting into square
+    const ratio = Math.min(w / img.width, h / img.height);
+    const dw = Math.round(img.width * ratio);
+    const dh = Math.round(img.height * ratio);
+    const dx = Math.round((width - dw) / 2);
+    const dy = Math.round((height - dh) / 2);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+
+  function downloadCanvas(canvas, name){
+    const link = document.createElement('a');
+    link.download = name;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  (async function(){
+    const img = await loadSVG();
+    const bgInput = document.getElementById('bg');
+    const padInput = document.getElementById('pad');
+
+    function renderAll(){
+      const bg = bgInput.value || '#002b5c';
+      const pad = Math.max(0, Math.min(40, parseInt(padInput.value||'10',10)));
+      ['c180','c192','c512'].forEach(id=>{
+        const c = document.getElementById(id);
+        drawToCanvas(c, img, bg, pad);
+      });
+    }
+
+    document.getElementById('btnRender').addEventListener('click', renderAll);
+    document.querySelectorAll('button.primary').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-target');
+        const name = btn.getAttribute('data-name');
+        const c = document.getElementById(id);
+        downloadCanvas(c, name);
+      });
+    });
+
+    // initial render
+    renderAll();
+  })();
+  </script>
+</body>
+</html>
