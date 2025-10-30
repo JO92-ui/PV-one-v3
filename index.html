@@ -7410,12 +7410,19 @@ const tpWrap = byId('tpInputs'); if(tpWrap) pvMenuObserver.observe(tpWrap, { chi
 // Tab switching: show only the selected section and keep timepoints visible only on Dashboard
 (function(){
   // Detect iOS/iPadOS (incl. iPadOS reporting as Mac) to optionally disable heavy editors
+  // Robust iOS / touch detection: prefer UA checks for iPad/iPhone but fall back to
+  // capability sniffing (maxTouchPoints / ontouchstart) for devices that report
+  // desktop-like platform strings (e.g. iPadOS reporting as MacIntel).
   const IS_IOS_TOUCH = (()=>{
     try{
       const ua = navigator.userAgent || navigator.vendor || '';
       const iPad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const iPhone = /iPhone|iPod/.test(ua);
-      return iPad || iPhone;
+      // capability sniffing: covers Windows/Chrome on touch laptops and newer iPadOS UA edge-cases
+      const touchCapable = (typeof window !== 'undefined') && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+      const result = !!(iPad || iPhone || touchCapable);
+      try{ console.info('Device detection:', { IS_IOS_TOUCH: result, ua: ua, platform: navigator.platform, maxTouchPoints: navigator.maxTouchPoints }); }catch(e){}
+      return result;
     }catch(e){ return false; }
   })();
   function setActiveTab(tab){
