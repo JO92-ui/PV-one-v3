@@ -2,8 +2,9 @@
 // Permite que la app funcione 100% offline después de la primera carga
 
 // Bump cache versions to force clients to fetch latest index.html (banner removed)
-const CACHE_NAME = 'pv-one-v3.0.1';
-const RUNTIME_CACHE = 'pv-one-runtime-v3.0.1';
+// Bump these values to force clients to refresh cached app shell when we deploy fixes
+const CACHE_NAME = 'pv-one-v3.0.2';
+const RUNTIME_CACHE = 'pv-one-runtime-v3.0.2';
 
 // Archivos esenciales que se cachean en la instalación
 const ESSENTIAL_FILES = [
@@ -109,89 +110,58 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // If the request is a navigation or HTML document, prefer network-first so we always
+  // attempt to load the latest `index.html` from the origin (avoids stale app-shell).
+  const isNavigate = request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'));
+
+  if (isNavigate) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // update cache with fresh HTML
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(()=>{});
+          }
+          return response;
+        })
+        .catch(() => {
+          // fall back to cached HTML if network fails
+          return caches.match(request).then(cached => cached || caches.match('./index.html'));
+        })
+    );
+    return;
+  }
+
+  // For other resources, keep the original Cache-first strategy
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
-        // Si está en caché, devolver (OFFLINE-FIRST)
         if (cachedResponse) {
-          // En background, actualizar caché si es recurso externo
+          // Background update for cross-origin resources
           if (url.origin !== location.origin) {
             fetch(request)
               .then(response => {
                 if (response && response.status === 200) {
-                  caches.open(RUNTIME_CACHE).then(cache => cache.put(request, response));
+                  caches.open(RUNTIME_CACHE).then(cache => cache.put(request, response)).catch(()=>{});
                 }
               })
-              .catch(() => {}); // Ignorar errores en background
+              .catch(()=>{});
           }
           return cachedResponse;
         }
-        
-        // Si no está en caché, intentar fetch
+
         return fetch(request)
           .then((response) => {
-            // No cachear respuestas inválidas
-            if (!response || response.status !== 200 || response.type === 'error') {
-              return response;
-            }
-            
-            // Clonar respuesta (solo se puede leer una vez)
+            if (!response || response.status !== 200 || response.type === 'error') return response;
             const responseToCache = response.clone();
-            
-            // Cachear recursos externos en runtime cache
             if (url.origin !== location.origin) {
-              caches.open(RUNTIME_CACHE)
-                .then((cache) => cache.put(request, responseToCache))
-                .catch(() => {}); // Ignorar errores de caché
+              caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, responseToCache)).catch(()=>{});
             }
-            
             return response;
           })
           .catch((error) => {
             console.warn('[Service Worker] Fetch failed:', request.url, error);
-            
-            // Si es un HTML, devolver página offline personalizada
-            if (request.headers.get('accept').includes('text/html')) {
-              return new Response(
-                `<!DOCTYPE html>
-                <html lang="es">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>PV-One - Offline</title>
-                  <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                           display: flex; align-items: center; justify-content: center; height: 100vh; 
-                           margin: 0; background: #f5f5f7; text-align: center; padding: 20px; }
-                    .container { max-width: 400px; }
-                    h1 { color: #002b5c; margin-bottom: 10px; }
-                    p { color: #666; line-height: 1.6; }
-                    .icon { font-size: 64px; margin-bottom: 20px; }
-                    button { background: #1f6fff; color: white; border: none; padding: 12px 24px; 
-                             border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 20px; }
-                    button:hover { background: #0056d6; }
-                  </style>
-                </head>
-                <body>
-                  <div class="container">
-                    <div class="icon">📡</div>
-                    <h1>Offline</h1>
-                    <p>The requested resource could not be loaded. Some features may be unavailable while offline.</p>
-                    <p>Most of the app works offline. You only need internet the first time to load Plotly.js.</p>
-                    <button onclick="location.reload()">Retry</button>
-                    <button onclick="location.href='./index.html'" style="background:#6c757d">Back to Home</button>
-                  </div>
-                </body>
-                </html>`,
-                {
-                  status: 200,
-                  statusText: 'OK',
-                  headers: { 'Content-Type': 'text/html' }
-                }
-              );
-            }
-            
-            // Para otros recursos, devolver error
             throw error;
           });
       })
