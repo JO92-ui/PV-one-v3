@@ -1,6 +1,25 @@
 /* Auto-generated CSS from inline styles */
 /* Generated on: 28/10/2025, 2:26:26 a.m. */
 
+/* CRITICAL: Prevent horizontal overflow on mobile devices */
+@media (max-width: 480px) {
+  html {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  
+  body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    position: relative !important;
+  }
+  
+  /* Prevent any element from causing horizontal scroll */
+  body > * {
+    max-width: 100vw !important;
+  }
+}
+
 .inline-style-1 {
   position:relative;
 }
@@ -1405,4 +1424,588 @@ body:not(.dark) .popover {
 .card > div[style*="max-height:400px"]{
   overflow-y:auto;
 }
+
+/* ============================================================================
+   RESPONSIVE MOBILE/TABLET OPTIMIZATION
+   Three-tier strategy to prevent clipping and maintain native layout feel:
+   - Tablets: Keep 2-column layout, make it more compact
+   - Medium phones: Single column, readable sizes
+   - Small phones (iPhone SE, etc): Ultra-compact, no horizontal scroll
+   ============================================================================ */
+
+/* TABLET: 768px - 1024px — Keep native 2-column layout but tighten spacing */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .container { padding: 10px !important; }
+  .card { padding: 10px !important; }
+  .grid { gap: 10px !important; }
+  
+  /* Gauges: 2 columns on tablets */
+  .gaugeGrid { 
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 8px !important; 
+  }
+  .gaugeGrid > div { min-height: 200px !important; }
+  
+  /* Reduce PV plot height slightly */
+  #plotPV { min-height: 380px !important; }
+  #clinicPVPlot { min-height: 380px !important; }
+  
+  /* Smaller fonts but still readable */
+  h2 { font-size: 16px !important; }
+  h3 { font-size: 14px !important; }
+}
+
+/* MEDIUM PHONES: 481px - 767px — Single column, comfortable reading */
+@media (max-width: 767px) and (min-width: 481px) {
+  .container { padding: 10px !important; }
+  .card { padding: 10px !important; border-radius: 8px !important; }
+  
+  /* Force single column layout */
+  .grid { 
+    grid-template-columns: 1fr !important; 
+    gap: 10px !important; 
+  }
+  .clinic-grid { 
+    grid-template-columns: 1fr !important; 
+    grid-template-areas: 'left' 'main' 'alarms' !important; 
+    gap: 10px !important; 
+  }
+  
+  /* Stack all card children */
+  .container .card .row,
+  .container .card > .row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  
+  .container .card .row > div,
+  .container .card > .row > div,
+  .card .metaRow > div {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Comfortable plot heights */
+  #plotPV { min-height: 320px !important; margin-left: 0 !important; margin-right: 0 !important; }
+  #clinicPVPlot { min-height: 320px !important; }
+  #plotHemo, #plotHemoClinic { height: 200px !important; }
+  
+  /* Gauges: single column */
+  .gaugeGrid { 
+    grid-template-columns: 1fr !important; 
+    gap: 8px !important; 
+  }
+  .gaugeGrid > div { min-height: 180px !important; }
+  
+  /* Readable text sizes */
+  .pill { padding: 4px 8px !important; font-size: 11px !important; }
+  .status { padding: 5px 10px !important; font-size: 12px !important; }
+  
+  /* Header adjustments */
+  header .brand-text .subtitle { font-size: 10px !important; }
+  .logo { height: 40px !important; }
+  
+  /* Inputs and selects: prevent zoom on focus (iOS) */
+  input, select, textarea { 
+    font-size: 16px !important; 
+    padding: 8px !important; 
+  }
+  
+  /* Timepoints */
+  .tpCard { padding: 10px !important; }
+  .tpWrap { grid-template-columns: 1fr !important; }
+}
+
+/* SMALL PHONES: ≤480px (iPhone SE, small Android) — Ultra-compact, no clipping */
+@media (max-width: 480px) {
+  /* CRITICAL: Prevent any horizontal overflow */
+  html, body {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  body { padding-top: 56px !important; }
+  
+  /* Force everything to fit within viewport */
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .container { 
+    padding: 6px !important; 
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  .card { 
+    padding: 8px !important; 
+    border-radius: 6px !important; 
+    margin-bottom: 8px !important; 
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Reset any auto-generated inline-style-* min-widths that cause clipping */
+  [class^="inline-style-"] {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Ensure clinic grid and its columns cannot exceed viewport */
+  .clinic-grid, .clinic-left, .clinic-main, .clinic-alarms {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Force any element using CSS grid/flex to not create horizontal overflow */
+  .row, .grid, .tpWrap, .gaugeGrid, .variables-grid {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Force absolute single column - override ALL inline styles */
+  .grid { 
+    grid-template-columns: 1fr !important; 
+    gap: 8px !important; 
+  }
+  .clinic-grid { 
+    grid-template-columns: 1fr !important; 
+    grid-template-areas: 'left' 'main' 'alarms' !important; 
+    gap: 8px !important; 
+  }
+  
+  /* Stack everything inside cards */
+  .container .card .row,
+  .container .card > .row,
+  .card .metaRow {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    max-width: 100% !important;
+  }
+  
+  .container .card .row > div,
+  .container .card > .row > div,
+  .card .metaRow > div,
+  .card > div[style*="min-width"],
+  .row > div[style*="min-width"],
+  .metaField {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+  
+  /* Remove ANY fixed widths from inputs/selects to prevent overflow */
+  input, select, textarea, button, .btn {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+  
+  input, select, textarea {
+    width: 100% !important;
+    padding: 7px !important;
+  }
+  
+  input[type="number"] {
+    width: 100% !important;
+  }
+  
+  /* Make buttons not overflow */
+  .btn, button {
+    padding: 7px 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Compact plot heights - still useful but smaller */
+  #plotPV { 
+    min-height: 260px !important; 
+    height: 260px !important;
+    margin-left: 0 !important; 
+    margin-right: 0 !important; 
+    width: 100% !important;
+  }
+  #clinicPVPlot { 
+    min-height: 260px !important; 
+    height: 260px !important;
+  }
+  #plotHemo, #plotHemoClinic { 
+    height: 180px !important; 
+    min-height: 180px !important;
+  }
+  #plotStage { 
+    min-height: 100px !important; 
+    height: 100px !important;
+  }
+  
+  /* Gauges: single column, compact */
+  .gaugeGrid { 
+    grid-template-columns: 1fr !important; 
+    gap: 6px !important; 
+  }
+  .gaugeGrid > div { 
+    min-height: 160px !important; 
+    padding: 4px !important;
+  }
+  
+  /* Compact text elements */
+  h2 { font-size: 15px !important; margin-bottom: 6px !important; }
+  h3 { font-size: 13px !important; margin: 8px 0 4px !important; }
+  .small { font-size: 11px !important; }
+  .pill { padding: 3px 6px !important; font-size: 10px !important; margin-right: 4px !important; }
+  .status { padding: 4px 8px !important; font-size: 11px !important; }
+  
+  /* Compact header - prevent overflow */
+  header { 
+    height: 52px !important; 
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  .top-header-inner {
+    max-width: 100% !important;
+    padding: 0 6px !important;
+  }
+  header .brand-text .subtitle { display: none !important; }
+  header .brand-text .title { font-size: 13px !important; }
+  .logo { height: 32px !important; }
+  .brand { gap: 6px !important; }
+  
+  /* Compact tabs and buttons in header */
+  .tabs { 
+    gap: 4px !important; 
+    flex-wrap: wrap !important;
+    max-width: 50vw !important;
+  }
+  .tab { 
+    padding: 4px 6px !important; 
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+  .action-buttons {
+    gap: 4px !important;
+    flex-wrap: wrap !important;
+  }
+  .top-actions {
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+  
+  /* Timepoint cards - ultra compact */
+  .tpCard { padding: 6px !important; gap: 6px !important; }
+  .tpWrap { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .chip { padding: 2px 6px !important; font-size: 10px !important; }
+  
+  /* Variable lists: allow wrapping, no horizontal scroll */
+  .variable-list { 
+    max-height: 100px !important; 
+    overflow-y: auto !important; 
+    overflow-x: hidden !important;
+    flex-wrap: wrap !important;
+  }
+  .variable-item {
+    font-size: 10px !important;
+    padding: 3px 6px !important;
+  }
+  
+  /* Summary boxes */
+  .summaryBox { 
+    min-height: 100px !important; 
+    font-size: 11px !important;
+    padding: 8px !important;
+  }
+  
+  /* Tables: make scrollable horizontally if needed but prefer smaller fonts */
+  table { 
+    font-size: 11px !important; 
+    display: block;
+    overflow-x: auto;
+    max-width: 100% !important;
+  }
+  th, td { 
+    padding: 4px !important; 
+    font-size: 11px !important;
+  }
+  
+  /* Remove negative margins that cause horizontal scroll */
+  .card:has(#plotPV) { 
+    padding-left: 8px !important; 
+    padding-right: 8px !important; 
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Clinic-specific mobile fixes */
+  .clinic-left, .clinic-main, .clinic-alarms {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  
+  /* Make ALL button groups wrap and not overflow */
+  .actions, .top-actions, .action-buttons, .row {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    max-width: 100% !important;
+  }
+  
+  /* Patient info section: force full width for each field */
+  .inline-style-6, .inline-style-9 {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Labels and metaField: allow full width */
+  label {
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .metaField {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .metaField input[type="number"],
+  .metaField select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  
+  /* Segmented controls: stack vertically */
+  .segmented, #csTypeGroup {
+    flex-direction: column !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  #csTypeGroup label {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
+  /* Legend boxes: allow wrapping */
+  .legendBox {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  .legendItem {
+    font-size: 10px !important;
+  }
+}
+
+/* EXTRA SMALL (iPhone SE 1st gen, very old phones): ≤360px */
+@media (max-width: 360px) {
+  .container { padding: 4px !important; }
+  .card { padding: 6px !important; }
+  h2 { font-size: 14px !important; }
+  h3 { font-size: 12px !important; }
+  .small { font-size: 10px !important; }
+  
+  /* Even more compact plots */
+  #plotPV, #clinicPVPlot { 
+    min-height: 220px !important; 
+    height: 220px !important; 
+  }
+  #plotHemo, #plotHemoClinic { 
+    height: 160px !important; 
+    min-height: 160px !important; 
+  }
+  
+  /* Minimal gauge height */
+  .gaugeGrid > div { min-height: 140px !important; }
+}
+
+/* PORTRAIT-SPECIFIC FIXES: target portrait orientation on narrow screens where clipping occurs */
+@media (max-width: 768px) and (orientation: portrait) {
+  /* Ensure header + inner container use full viewport width */
+  header, .top-header-inner, .top-header-inner > .brand, .top-header-inner .top-actions {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Remove any negative margins used for full-bleed plots on larger screens */
+  #plotPV, #clinicPVPlot, .card:has(#plotPV) {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Force clinic left/main/alarms stack and full width in portrait */
+  .clinic-grid { grid-template-columns: 1fr !important; grid-auto-rows: auto !important; }
+  .clinic-left, .clinic-main, .clinic-alarms { width: 100% !important; max-width: 100vw !important; min-width: 0 !important; }
+
+  /* Reduce side gutters introduced by centered containers */
+  .top-header-inner, .container { margin-left: 0 !important; margin-right: 0 !important; }
+
+  /* Prevent any inline-style generated elements from keeping large min-widths */
+  [class^="inline-style-"] { min-width: 0 !important; }
+
+  /* Specific control that previously overflowed: color swatch, small popovers */
+  .popover, .legendBox, .gaugeGrid > div, .variable-list { max-width: 100% !important; }
+
+  /* Make sure the patient info (left card) doesn't keep a wide min-width */
+  .inline-style-6, .inline-style-9 { min-width: 0 !important; width: 100% !important; }
+}
+
+/* Extra-aggressive rules when running inside an embedded WebView in portrait
+   Some webviews add device-level chrome, safe-area insets or scaling that effectively
+   reduce usable width. When the JS detector sets .in-webview-portrait on <body>
+   apply tighter sizes and hide non-essential panels to eliminate clipping. */
+.in-webview-portrait {
+  font-size: 14px !important;
+}
+.in-webview-portrait header, .in-webview-portrait .top-header-inner { padding-left:6px !important; padding-right:6px !important; }
+.in-webview-portrait .card { padding:6px !important; }
+.in-webview-portrait #plotPV, .in-webview-portrait #clinicPVPlot { min-height: 180px !important; height:180px !important; }
+.in-webview-portrait .gaugeGrid > div { min-height: 120px !important; }
+.in-webview-portrait .summaryBox { min-height: 80px !important; }
+.in-webview-portrait .variable-list { max-height: 80px !important; }
+
+/* Hide less important panels in webview portrait to free vertical/width space
+   Keep PV/hemo legend boxes visible so their buttons/controls remain available. */
+.in-webview-portrait .clinic-support-timeline {
+  display: none !important;
+}
+
+/* Make timepoint controls denser */
+.in-webview-portrait .tpCard { padding:6px !important; }
+.in-webview-portrait .tpCard .devices-grid { grid-template-columns: 24px 80px 1fr !important; }
+
+/* Header optimizations for WebView portrait: allow tabs to wrap or scroll so they
+  remain accessible and don't get clipped. Reduce logo/title sizing and padding
+  to maximize available horizontal space without hiding tabs. */
+.in-webview-portrait .top-header-inner { flex-wrap: wrap !important; align-items: center !important; }
+.in-webview-portrait .brand { flex: 0 0 auto; display:flex; align-items:center; gap:8px; }
+.in-webview-portrait .brand .logo { height:36px !important; width:auto !important; }
+.in-webview-portrait .brand-text .title { font-size:13px !important; }
+.in-webview-portrait .brand-text .subtitle { display:none !important; }
+
+.in-webview-portrait .tabs {
+  /* allow the tabs row to occupy remaining width and wrap to the next line if needed */
+  flex: 1 1 100% !important;
+  display: flex !important;
+  gap: 6px !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  order: 2 !important; /* move tabs under brand if wrapped */
+  padding-top: 6px !important;
+}
+.in-webview-portrait .tab { padding: 6px 8px !important; font-size: 13px !important; }
+
+/* Avoid scaling transforms in portrait (blurry on some WebViews). Let the
+  header wrap naturally or scroll horizontally instead of shrinking content. */
+.in-webview-portrait * { transform: none !important; }
+.in-webview-portrait .container { transform: none !important; }
+
+/* P0 fixes */
+/* Header: allow popovers to overflow and be visible (avoid clipping) */
+header, .top-header-inner { overflow: visible !important; }
+.top-header-inner .popover { position: absolute !important; z-index: 100060 !important; max-height: 60vh !important; overflow-y: auto !important; }
+
+/* Prognosis: mobile card view (applies when table would overflow) */
+.clinic-prognosis-cards { display: none; gap: 8px; }
+@media (max-width: 768px) {
+  .clinic-prognosis-table { display: none !important; }
+  .clinic-prognosis-cards { display: flex !important; flex-direction: column !important; }
+  .clinic-prognosis-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .clinic-prognosis-card h4 { margin: 0 0 6px; font-size: 14px; color: var(--pri); }
+}
+
+/* Legend removed permanently per request: hide any legend containers globally so
+   legend controls (Plotly or custom) do not display anywhere in the UI. */
+.legendBox, #pvLegend, #hemoLegend, #pvLegendClinic, #pvLegendClinic, #pvLegend {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hide zero-valued pills to reduce clutter */
+.pill[data-hide-zero="true"] { display: inline-block; }
+.pill[data-hide-zero="true"][data-value="0"] { display: none !important; }
+
+/* Mobile form grid 2-col for metaRow and timepoint controls */
+@media (max-width: 480px) {
+  .metaRow, .tpCard .devices-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .metaRow .metaField, .tpCard .devices-grid > div { width: 100% !important; }
+  input[type="number"], input[type="text"], select { height: 36px !important; }
+}
+
+/* Hide Color control on very small screens; will be available under Advanced */
+@media (max-width: 480px) {
+  .color-control, .color-swatch { display: none !important; }
+}
+
+/* Floating Add Timepoint FAB for mobile */
+.fab-add-tp { position: fixed; right: 16px; bottom: 16px; z-index: 100100; width: 56px; height: 56px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background: var(--acc); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.24); }
+@media (min-width: 481px) { .fab-add-tp { display: none !important; } }
+
+/* Safe-area for header */
+header { padding-top: env(safe-area-inset-top); }
+
+/* Ensure inputs show unit as pseudo-element when data-unit provided */
+.input-with-unit { position: relative; }
+.input-with-unit input::placeholder { padding-right: 36px; }
+.input-with-unit[data-unit]::after { content: attr(data-unit); position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #556; pointer-events: none; }
+
+/* ------------------------------------------------------------------
+   Clinic Panel: mobile tightening and timepoint editor adjustments
+   - single column on mobile, smaller vertical gaps (gap-y-3 ≈ 12px)
+   - remove the vertical divider (category title border-right) on small screens
+   - timepoint editor: 2-column grid under <md and fixed control heights
+   - hide Color control on <md so it doesn't break flow (moved to Advanced)
+   - render BMI/BSA as secondary text under Height/Weight on mobile
+   ------------------------------------------------------------------ */
+
+@media (max-width: 767px) {
+  /* Clinic panel cards: single column and tighter vertical spacing */
+  .clinic-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  #sec-clinic .card { margin-bottom: 12px !important; }
+
+  /* Remove the clear vertical divider on small screens (was border-right) */
+  .inline-style-224, .inline-style-227, .clinic-theme .variable-category h4, .clinic-theme .category-title {
+    border-right: none !important;
+    padding-right: 0 !important;
+    border-bottom: 1px solid rgba(14,165,164,0.04) !important;
+    padding-bottom: 8px !important;
+  }
+
+  /* Timepoint editor: 2 columns and uniform input heights */
+  .tpCard .devices-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .tpCard .devices-grid > div { display:flex; gap:8px; align-items:center; }
+  .tpCard .devices-grid input, .tpCard .devices-grid select, .tpCard .devices-grid button { height: 40px !important; }
+
+  /* Send Color controls to Advanced on small screens (hide from main flow) */
+  .color-control, .color-swatch { display: none !important; }
+
+  /* Hide BMI/BSA chips and show inline secondary text instead */
+  #chipBMI, #chipBSA { display: none !important; }
+  #metaBmiBsaDisplay { display:block; font-size:12px; color: #6b7280; margin-top:6px; }
+}
+
+/* Ensure the BMI/BSA meta element is hidden by default for desktop where chips remain visible */
+#metaBmiBsaDisplay { display: none; }
+
 

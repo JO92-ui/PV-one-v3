@@ -18,6 +18,80 @@
 </script>
 <meta name="description" content="Pressure-Volume Loop Analysis & Hemodynamic Monitoring for Cardiogenic Shock" />
 
+<!-- Forzar modo landscape en móviles y bloquear portrait -->
+<script>
+  (function() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Solicitar bloqueo a landscape (funciona en PWA/instaladas)
+      if (window.screen && window.screen.orientation) {
+        try {
+          window.screen.orientation.lock('landscape-primary').catch(err => {
+            console.warn('No se pudo bloquear a landscape:', err);
+          });
+        } catch (e) {
+          console.warn('Lock orientation no soportado:', e);
+        }
+      }
+      
+      // Mostrar overlay bloqueante si está en portrait
+      function checkOrientation() {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const overlay = document.getElementById('portraitBlockOverlay');
+        
+        if (isPortrait) {
+          // Crear overlay si no existe
+          if (!overlay) {
+            const div = document.createElement('div');
+            div.id = 'portraitBlockOverlay';
+            div.style.cssText = `
+              position: fixed;
+              top: 0; left: 0; right: 0; bottom: 0;
+              background: linear-gradient(135deg, #002b5c 0%, #154ea8 100%);
+              color: #fff;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 99999;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              text-align: center;
+              padding: 20px;
+            `;
+            div.innerHTML = `
+              <div style="max-width: 300px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
+                <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff;">Gira el dispositivo</h2>
+                <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.9); line-height: 1.5;">
+                  Esta aplicación solo funciona en modo <strong>horizontal (landscape)</strong>
+                </p>
+                <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.7);">
+                  Gira tu dispositivo para continuar
+                </p>
+              </div>
+            `;
+            document.body.appendChild(div);
+          }
+        } else {
+          // Remover overlay si existe
+          if (overlay) {
+            overlay.remove();
+          }
+        }
+      }
+      
+      // Verificar orientación inicial
+      window.addEventListener('load', checkOrientation);
+      // Verificar en cada cambio de orientación
+      window.addEventListener('orientationchange', checkOrientation);
+      // Verificar en cada resize
+      window.addEventListener('resize', checkOrientation);
+      // Verificar inmediatamente
+      checkOrientation();
+    }
+  })();
+</script>
+
 <!-- PWA Manifest removed to disable installability/banner -->
 <!-- <link rel="manifest" href="manifest.json" /> -->
 
@@ -94,6 +168,179 @@
     try{ window.loadPlotly().catch(()=>{}); }catch(e){}
   })();
 </script>
+
+  <!-- Detect WebView / embedded contexts and add body classes for portrait adjustments -->
+  <script>
+    (function(){
+      const ua = navigator.userAgent || '';
+      // heuristics for common webview hosts (Android WebView, WKWebView, Capacitor, Cordova, Electron)
+      const isWebView = /\b(wv|WebView|WKWebView|Cordova|Capacitor|Electron)\b/i.test(ua) || !!window.ReactNativeWebView || !!window.externalHost;
+
+      function updateBodyClasses(){
+        const isPortrait = window.innerHeight >= window.innerWidth;
+        if(isWebView) document.body.classList.add('in-webview'); else document.body.classList.remove('in-webview');
+        if(isWebView && isPortrait) document.body.classList.add('in-webview-portrait'); else document.body.classList.remove('in-webview-portrait');
+      }
+
+      window.addEventListener('resize', updateBodyClasses, {passive:true});
+      window.addEventListener('orientationchange', updateBodyClasses, {passive:true});
+      // run once early
+      try{ updateBodyClasses(); }catch(e){}
+      // Also run after DOM loaded to ensure body exists
+      document.addEventListener('DOMContentLoaded', updateBodyClasses);
+    })();
+  </script>
+
+  <!-- UI fixes & helpers for mobile / webview -->
+  <script>
+    (function(){
+      function formatChipsAndHideZeros(){
+        // Collapse pill text like "0.00" to integer or hide if zero
+        document.querySelectorAll('.pill, .chip').forEach(el=>{
+          const txt = el.textContent.trim();
+          const m = txt.match(/([-+]?\d+)(?:\.0+)?(?:\d*)/);
+          if(m){
+            const num = parseFloat(m[0]);
+            // store data-value for CSS hiding
+            el.setAttribute('data-value', String(num));
+            // hide exact zeros
+            if(num === 0){ el.setAttribute('data-hide-zero','true'); }
+            // format decimals like 0.00 -> 0
+            if(/\.0+$/.test(txt)){
+              el.textContent = txt.replace(/\.0+$/,'');
+            }
+          }
+        });
+      }
+
+      // Legend UI removed per user request. attachLegendToggles previously inserted
+      // buttons into the DOM; that behavior is intentionally disabled.
+
+      function makePrognosisCards(){
+        // transform table rows into card list on small screens
+        const table = document.querySelector('.clinic-prognosis-table');
+        const placeholder = document.getElementById('clinicPrognosis');
+        if(!table || !placeholder) return;
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'clinic-prognosis-cards';
+        Array.from(table.tBodies[0].rows).forEach((row,i)=>{
+          const card = document.createElement('div'); card.className='clinic-prognosis-card';
+          const time = row.cells[0] ? row.cells[0].textContent.trim() : `TP ${i}`;
+          const h = document.createElement('h4'); h.textContent = `Time ${time}`; card.appendChild(h);
+          // take first 4 metrics
+          for(let c=1;c<Math.min(row.cells.length,5);c++){
+            const label = table.tHead ? (table.tHead.rows[0].cells[c] ? table.tHead.rows[0].cells[c].textContent : '') : '';
+            const v = row.cells[c] ? row.cells[c].textContent.trim() : '';
+            const p = document.createElement('div'); p.style.marginBottom='4px'; p.innerHTML = `<strong>${label}</strong>: ${v}`;
+            card.appendChild(p);
+          }
+          cardsContainer.appendChild(card);
+        });
+        // replace placeholder content with cards only on small screens
+        placeholder.innerHTML=''; placeholder.appendChild(cardsContainer);
+      }
+
+      function setNumericInputAttrs(){
+        // Set inputmode intelligently: decimal for fractional values (Height, Weight, CO, CI, Lactate)
+        // numeric for discrete integer fields (HR, SBP, DBP, RAP, PCWP)
+        document.querySelectorAll('input[type="number"]').forEach(inp=>{
+          const id = (inp.id || '').toLowerCase();
+          const name = (inp.name || '').toLowerCase();
+          const target = id + ' ' + name;
+          // decimal fields (allow punctuation)
+          if(/pt(h|height)|height|weight|wt|co|ci|lactate|creatinine|svO2|svo2/i.test(target)){
+            inp.setAttribute('inputmode','decimal');
+            inp.setAttribute('pattern','[0-9]*\\.?[0-9]*');
+          } else if(/(^hr$|\bhr\b|sbp|dbp|rap|pcwp|bpm|pulse)/i.test(target)){
+            inp.setAttribute('inputmode','numeric');
+            inp.setAttribute('pattern','[0-9]*');
+          } else {
+            // fallback to decimal — more forgiving on modern mobile keyboards
+            inp.setAttribute('inputmode','decimal');
+            inp.setAttribute('pattern','[0-9]*\\.?[0-9]*');
+          }
+        });
+      }
+
+      // Show BMI · BSA as secondary text under Height/Weight on narrow screens
+      function updateBmiBsaDisplay(){
+        const hEl = document.getElementById('ptH');
+        const wEl = document.getElementById('ptW');
+        if(!hEl || !wEl) return;
+        let meta = document.getElementById('metaBmiBsaDisplay');
+        if(!meta){
+          meta = document.createElement('div');
+          meta.id = 'metaBmiBsaDisplay';
+          meta.className = 'small';
+          // Place directly after the first metaRow (height/weight row)
+          const firstMeta = document.querySelector('.metaRow');
+          if(firstMeta && firstMeta.parentNode){
+            firstMeta.parentNode.insertBefore(meta, firstMeta.nextSibling);
+          } else {
+            document.body.appendChild(meta);
+          }
+        }
+
+        const h = parseFloat(hEl.value) || 0;
+        const w = parseFloat(wEl.value) || 0;
+        let bmiText = '';
+        let bsaText = '';
+        if(h > 0 && w > 0){
+          const bmi = w / (h * h);
+          bmiText = `BMI ${bmi.toFixed(1)}`;
+          const heightCm = h * 100;
+          const bsa = Math.sqrt((heightCm * w) / 3600);
+          bsaText = `BSA ${bsa.toFixed(2)} m²`;
+        }
+        meta.textContent = [bmiText, bsaText].filter(Boolean).join(' · ') || 'BMI — · BSA —';
+
+        // keep clinic patient display in sync if present
+        const clinicBmi = document.getElementById('clinicPatientBMI');
+        const clinicBsa = document.getElementById('clinicPatientBSA');
+        if(clinicBmi) clinicBmi.textContent = bmiText ? bmiText.replace('BMI ','') : '—';
+        if(clinicBsa) clinicBsa.textContent = bsaText ? bsaText.replace('BSA ','').replace(' m²','') : '—';
+      }
+
+      function createFAB(){
+        if(document.getElementById('fabAddTP')) return;
+        const btn = document.createElement('button'); btn.id='fabAddTP'; btn.className='fab-add-tp'; btn.title='Add timepoint';
+        btn.innerHTML = '+';
+        btn.onclick = ()=>{ if(typeof addTP === 'function') addTP(); else alert('Add timepoint'); };
+        document.body.appendChild(btn);
+      }
+
+        /* Mobile tab-hiding behavior removed: keep all header tabs visible on small screens
+           to avoid clipping issues. The app will instead rely on responsive CSS or
+           horizontal scrolling if needed. */
+
+        // Simple More button toggle if not already wired
+        (function(){
+          const moreBtn = document.getElementById('btnMore');
+          const moreMenu = document.getElementById('moreMenu');
+          if(!moreBtn || !moreMenu) return;
+          moreBtn.addEventListener('click', ()=>{
+            moreMenu.style.display = (moreMenu.style.display === 'flex' || moreMenu.style.display === 'block') ? 'none' : 'flex';
+            moreMenu.style.flexDirection = 'column';
+          });
+          // close when clicking outside
+          document.addEventListener('click', (ev)=>{ if(!moreBtn.contains(ev.target) && !moreMenu.contains(ev.target)) moreMenu.style.display='none'; });
+        })();
+
+  // run on load and on small viewport change
+  function onReady(){
+    formatChipsAndHideZeros();
+    setNumericInputAttrs();
+    createFAB();
+    if(window.innerWidth<=768) makePrognosisCards();
+    // BMI/BSA secondary text and live updates
+    try{ updateBmiBsaDisplay(); const h=document.getElementById('ptH'), w=document.getElementById('ptW'); if(h) h.addEventListener('input', updateBmiBsaDisplay); if(w) w.addEventListener('input', updateBmiBsaDisplay); }catch(e){}
+        // Manage header tabs on mobile: keep only Dashboard visible, move others into More menu
+          // mobile tab management removed: keep tabs visible to avoid clipping
+  }
+  document.addEventListener('DOMContentLoaded', onReady);
+  window.addEventListener('resize', ()=>{ if(window.innerWidth<=768) makePrognosisCards(); });
+    })();
+  </script>
 
 <script>
   // Ensure a minimal byId helper is available early for scripts that run before the main helpers are declared
@@ -403,6 +650,20 @@ try {
   /* Slightly larger base font for improved legibility across the app */
   html,body{font-size:16px}
   body{font-family:Inter,Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+  
+  /* Bloquear portrait en móviles: ocultar contenido cuando está en portrait */
+  @media (orientation: portrait) {
+    /* Para dispositivos móviles detectados */
+    body:has(#portraitBlockOverlay) {
+      overflow: hidden;
+    }
+    /* Prevención adicional: si el overlay está presente, oscurecer la UI */
+    #portraitBlockOverlay ~ header,
+    #portraitBlockOverlay ~ .container {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+  }
   header{background:linear-gradient(90deg,#0b2d66,#154ea8);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
   header h1{margin:0;font-size:18px;font-weight:700}
   .tabs{display:flex;gap:6px}
