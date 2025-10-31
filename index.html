@@ -240,12 +240,12 @@
             div.innerHTML = `
               <div style="max-width: 300px; animation: fadeIn 0.3s ease-in;">
                 <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
-                <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff; font-weight: 700;">Gira el dispositivo</h2>
+                <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff; font-weight: 700;">Rotate Device</h2>
                 <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.95); line-height: 1.5; font-weight: 500;">
-                  Esta aplicación solo funciona en modo <strong>horizontal (landscape)</strong>
+                  This app only works in <strong>landscape mode</strong>
                 </p>
                 <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.8);">
-                  Gira tu dispositivo para continuar →
+                  Rotate your device to continue →
                 </p>
               </div>
             `;
@@ -1689,12 +1689,12 @@ try {
       <!-- Left: Lite v3 iPad - line 1: patient name; line 2: action buttons -->
       <div style="display:flex;flex-direction:column;gap:6px;min-width:420px;flex:1">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <label>Paciente <input id="patientName" value="Paciente 1" style="width:220px"></label>
+          <label>Patient <input id="patientName" value="Patient 1" style="width:220px"></label>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <button class="btn" id="btnImportMenu">📂 Import CSV</button>
           <button class="btn" id="btnExportMenu">💾 Export CSV</button>
-          <button class="btn" id="btnCleanAllPatient" title="Limpiar todo">🧹 Clean all</button>
+          <button class="btn" id="btnCleanAllPatient" title="Clear all">🧹 Clean all</button>
         </div>
         <!-- Hidden legacy elements kept to avoid runtime errors in Lite version -->
         <div style="display:none">
@@ -1726,7 +1726,7 @@ try {
         <!-- Row 3: Cardiogenic shock label + segmented control (same line) -->
         <div class="metaRow" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap">
-            <label class="metaField" style="min-width:160px;white-space:nowrap">Cardiogenic shock:</label>
+            <label class="metaField" style="min-width:160px;white-space:nowrap">Cardiogenic shock type:</label>
             <div class="segmented" id="csTypeGroup" title="Primary CS etiology">
             <input type="radio" name="csType" id="csTypeAMI" value="ami"><label for="csTypeAMI">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6c-1.9-1.8-5-1.8-6.9 0L12 6.5l-1.9-1.9c-1.9-1.8-5-1.8-6.9 0-2 1.9-2 5 0 6.9l1.9 1.9L12 21l6.9-6.6 1.9-1.9c2-1.9 2-5 0-6.9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
