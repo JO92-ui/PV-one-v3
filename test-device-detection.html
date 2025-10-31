@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test: Detección de iPhone por Parámetros</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #002b5c;
+      margin-bottom: 20px;
+      font-size: 24px;
+      border-bottom: 3px solid #154ea8;
+      padding-bottom: 10px;
+    }
+    .detection-box {
+      background: #f9f9f9;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .detection-box.iphone {
+      border-left: 5px solid #ff6b6b;
+      background: #fff5f5;
+    }
+    .detection-box.ipad {
+      border-left: 5px solid #51cf66;
+      background: #f5fff7;
+    }
+    .detection-box.other {
+      border-left: 5px solid #748ffc;
+      background: #f5f7ff;
+    }
+    .label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .value {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 8px;
+      word-break: break-all;
+      font-size: 13px;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .status.yes {
+      background: #d3f9d8;
+      color: #2f7d32;
+    }
+    .status.no {
+      background: #ffe0e0;
+      color: #c62828;
+    }
+    .iphone-models {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    .iphone-models h3 {
+      color: #002b5c;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .model-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .model-item {
+      background: white;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      border-left: 3px solid #ff6b6b;
+    }
+    .model-item.match {
+      background: #d3f9d8;
+      border-left-color: #51cf66;
+      font-weight: 600;
+    }
+    button {
+      background: #154ea8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 10px 0;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #002b5c;
+    }
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔍 Test: Detección de iPhone por Parámetros de Pantalla</h1>
+
+  <div id="results"></div>
+
+  <button onclick="location.reload()">🔄 Refrescar Test</button>
+  <button onclick="copyToClipboard()">📋 Copiar Resultados</button>
+
+  <div class="warning">
+    💡 <strong>Nota:</strong> Este test verifica los parámetros reales de tu dispositivo contra la tabla de referencia de iPhone.
+  </div>
+</div>
+
+<script>
+  const iPhoneScreens = [
+    { width: 320, height: 568, dpr: 2, name: 'iPhone 5/5c/5s, SE (1ª gen)' },
+    { width: 375, height: 667, dpr: 2, name: 'iPhone 6/6s/7/8, SE (2ª/3ª gen)' },
+    { width: 414, height: 736, dpr: 3, name: 'iPhone 6+/7+/8+ Plus' },
+    { width: 375, height: 812, dpr: 3, name: 'iPhone X/XS/11 Pro' },
+    { width: 414, height: 896, dpr: 2, name: 'iPhone XR/11' },
+    { width: 414, height: 896, dpr: 3, name: 'iPhone XS Max/11 Pro Max' },
+    { width: 360, height: 780, dpr: 3, name: 'iPhone 12/13 mini' },
+    { width: 390, height: 844, dpr: 3, name: 'iPhone 12/13/14 Pro' },
+    { width: 428, height: 926, dpr: 3, name: 'iPhone 12+/13+/14+ Plus' },
+    { width: 393, height: 852, dpr: 3, name: 'iPhone 14 Pro/15/15 Pro/16' },
+    { width: 430, height: 932, dpr: 3, name: 'iPhone 15+/15 Pro Max/16 Plus' },
+    { width: 402, height: 874, dpr: 3, name: 'iPhone 16 Pro' },
+    { width: 440, height: 956, dpr: 3, name: 'iPhone 16 Pro Max' }
+  ];
+
+  function runDetection() {
+    const ua = navigator.userAgent;
+    const isIPad = /iPad/.test(ua);
+    const isIPhone = /iPhone/.test(ua);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+
+    const width = Math.min(window.screen.width, window.screen.height);
+    const height = Math.max(window.screen.width, window.screen.height);
+    const dpr = window.devicePixelRatio || 1;
+
+    // Buscar coincidencia
+    let matchedModel = null;
+    for (let screen of iPhoneScreens) {
+      if (Math.abs(width - screen.width) <= 2 && 
+          Math.abs(height - screen.height) <= 2 &&
+          Math.abs(dpr - screen.dpr) <= 0.5) {
+        matchedModel = screen;
+        break;
+      }
+    }
+
+    function getDeviceType() {
+      if (isIPad) return 'iPad';
+      if (isIPhone) return 'iPhone';
+      if (/Android/.test(ua)) return 'Android';
+      if (/Windows/.test(ua)) return 'Windows';
+      if (/Mac/.test(ua)) return 'macOS';
+      return 'Otro dispositivo';
+    }
+
+    const deviceType = getDeviceType();
+    const isReallyIPhone = isIPhone && (matchedModel || true);
+
+    // Generar HTML
+    let html = `
+      <div class="detection-box ${isIPad ? 'ipad' : isIPhone ? 'iphone' : 'other'}">
+        <div class="label">📱 Dispositivo Detectado:</div>
+        <div class="value">${deviceType}</div>
+    `;
+
+    if (isIPhone && isIPad) {
+      html += '<p class="label">⚠️ Posible simulador o caso edge</p>';
+    }
+
+    html += `
+        <div class="label">📊 Información del Dispositivo:</div>
+        <div class="value">
+          Ancho: <strong>${window.screen.width}px</strong> (portrait: ${width}px)<br>
+          Alto: <strong>${window.screen.height}px</strong> (portrait: ${height}px)<br>
+          DPR: <strong>${dpr}</strong>
+        </div>
+
+        <div class="label">🔍 User Agent:</div>
+        <div class="value" style="font-size: 11px; max-height: 100px; overflow-y: auto;">
+          ${ua.substring(0, 200)}...
+        </div>
+
+        <div class="label">✅ Resultado de Detección:</div>
+    `;
+
+    if (isIPhone) {
+      if (matchedModel) {
+        html += `
+          <div style="background: #d3f9d8; padding: 10px; border-radius: 4px; margin: 10px 0;">
+            <strong style="color: #2f7d32;">✓ COINCIDENCIA EXACTA ENCONTRADA:</strong><br>
+            ${matchedModel.name}<br>
+            <span style="font-size: 12px; color: #666;">
+              ${matchedModel.width}×${matchedModel.height} @ ${matchedModel.dpr}x
+            </span>
+          </div>
+        `;
+      } else {
+        html += `
+          <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+            <strong style="color: #856404;">⚠️ NO COINCIDENCIA EN TABLA</strong><br>
+            <span style="font-size: 12px;">
+              Pero tiene User Agent de iPhone (fallback: se considerará iPhone)<br>
+              Posible: Simulador con parámetros personalizados o modelo futuro
+            </span>
+          </div>
+        `;
+      }
+      html += `<div class="status yes">✓ SER BLOQUEADO A LANDSCAPE (solo si no es iPad)</div>`;
+    } else if (isIPad) {
+      html += `<div style="background: #d3f9d8; padding: 10px; border-radius: 4px; margin: 10px 0;">
+        <strong style="color: #2f7d32;">✓ DETECTED AS IPAD</strong><br>
+        Sin restricciones de orientación
+      </div>`;
+      html += `<div class="status yes">✓ ROTACIÓN LIBRE</div>`;
+    } else {
+      html += `<div style="background: #e3f2fd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+        <strong>ℹ️ Otro dispositivo detectado</strong>
+      </div>`;
+      html += `<div class="status no">✗ NO BLOQUEADO (no es iPhone)</div>`;
+    }
+
+    html += `</div>`;
+
+    // Tabla de modelos
+    html += `
+      <div class="iphone-models">
+        <h3>📋 Tabla Completa de Modelos iPhone</h3>
+        <div class="model-list">
+    `;
+
+    for (let model of iPhoneScreens) {
+      const isMatch = matchedModel && model.name === matchedModel.name;
+      html += `
+        <div class="model-item ${isMatch ? 'match' : ''}">
+          ${isMatch ? '✓ ' : ''}${model.name}<br>
+          <span style="font-size: 11px; opacity: 0.7;">
+            ${model.width}×${model.height} @${model.dpr}x
+          </span>
+          ${isMatch ? '<br><span style="color: #2f7d32; font-weight: bold;">← TU DISPOSITIVO</span>' : ''}
+        </div>
+      `;
+    }
+
+    html += `</div></div>`;
+
+    // Datos JSON
+    html += `
+      <div class="detection-box">
+        <div class="label">📦 Datos Técnicos (JSON):</div>
+        <div class="value" style="overflow-x: auto;">
+${JSON.stringify({
+  device: deviceType,
+  screen: { width, height, dpr },
+  userAgent: ua.substring(0, 100),
+  isIPhone,
+  isIPad,
+  matchedModel: matchedModel ? matchedModel.name : null,
+  tolerance: { pixelDelta: '±2px', dprDelta: '±0.5' }
+}, null, 2)}
+        </div>
+      </div>
+    `;
+
+    document.getElementById('results').innerHTML = html;
+    window.lastTestData = { ua, isIPad, isIPhone, width, height, dpr, matchedModel };
+  }
+
+  function copyToClipboard() {
+    const data = window.lastTestData;
+    if (!data) {
+      alert('Ejecuta el test primero');
+      return;
+    }
+    const text = `
+REPORTE DE DETECCIÓN DE DISPOSITIVO
+====================================
+User Agent: ${data.ua.substring(0, 100)}...
+Device Type: ${data.isIPad ? 'iPad' : data.isIPhone ? 'iPhone' : 'Otro'}
+Screen: ${data.width}×${data.height} @ ${data.dpr}x DPR
+Modelo Detectado: ${data.matchedModel ? data.matchedModel.name : 'No coincide con tabla'}
+Tolerancia: ±2px para dimensiones, ±0.5 para DPR
+    `.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      alert('✓ Resultados copiados al portapapeles');
+    }).catch(() => {
+      alert('No se pudo copiar (requiere HTTPS o localhost)');
+    });
+  }
+
+  // Ejecutar al cargar
+  runDetection();
+
+  // Re-ejecutar si la ventana cambia de tamaño o orientación
+  window.addEventListener('orientationchange', runDetection);
+  window.addEventListener('resize', () => {
+    // Solo después de 500ms para evitar ejecuciones múltiples
+    clearTimeout(window.resizeTimeout);
+    window.resizeTimeout = setTimeout(runDetection, 500);
+  });
+</script>
+
+</body>
+</html>

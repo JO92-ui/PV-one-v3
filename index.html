@@ -18,18 +18,172 @@
 </script>
 <meta name="description" content="Pressure-Volume Loop Analysis & Hemodynamic Monitoring for Cardiogenic Shock" />
 
-<!-- Forzar modo landscape en móviles y bloquear portrait -->
+<!-- Icons -->
+<!-- Favicon for browsers -->
+<link rel="icon" type="image/x-icon" href="Logo-ITAMEX.ico" />
+<!-- Apple/iOS home screen icon (PNG recommended). If missing, iOS will fallback to a screenshot. -->
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+<!-- Safari pinned tab (macOS) -->
+<link rel="mask-icon" href="Logo-ITAMEX.svg" color="#002b5c" />
+
+<!-- Script de orientación para agregar clase al body (para CSS) -->
+<script>
+  (function() {
+    const ua = navigator.userAgent;
+    const isIPad = /iPad/.test(ua);
+    const isIPhone = /iPhone/.test(ua);
+    
+    // Parámetros de pantalla conocidos de iPhone (en portrait)
+    // Verificados en: ios-resolution.com, webmobilefirst.com
+    const iPhoneScreens = [
+      // iPhone 5/5c/5s, SE (1ª gen)
+      { width: 320, height: 568, dpr: 2 },
+      // iPhone 6/6s/7/8, SE (2ª/3ª gen 2020–2022)
+      { width: 375, height: 667, dpr: 2 },
+      // iPhone 6/6s/7/8 Plus
+      { width: 414, height: 736, dpr: 3 },
+      // iPhone X / XS / 11 Pro
+      { width: 375, height: 812, dpr: 3 },
+      // iPhone XR / 11 (DPR 2)
+      { width: 414, height: 896, dpr: 2 },
+      // iPhone XS Max / 11 Pro Max (DPR 3)
+      { width: 414, height: 896, dpr: 3 },
+      // iPhone 12 mini y 13 mini
+      { width: 360, height: 780, dpr: 3 },
+      // iPhone 12 / 12 Pro / 13 / 13 Pro / 14
+      { width: 390, height: 844, dpr: 3 },
+      // iPhone 12 Pro Max / 13 Pro Max / 14 Plus
+      { width: 428, height: 926, dpr: 3 },
+      // iPhone 14 Pro / 15 / 15 Pro
+      { width: 393, height: 852, dpr: 3 },
+      // iPhone 15 Plus / 15 Pro Max / 16 Plus
+      { width: 430, height: 932, dpr: 3 },
+      // iPhone 16 (mismo bucket que 15/14 Pro)
+      { width: 393, height: 852, dpr: 3 },
+      // iPhone 16 Pro
+      { width: 402, height: 874, dpr: 3 },
+      // iPhone 16 Pro Max
+      { width: 440, height: 956, dpr: 3 }
+    ];
+    
+    // Función para detectar si es un iPhone basado en parámetros de pantalla
+    function isDeviceIPhone() {
+      // Primero verificar User Agent
+      if (!isIPhone) return false;
+      
+      // Obtener dimensiones en portrait
+      const width = Math.min(window.screen.width, window.screen.height);
+      const height = Math.max(window.screen.width, window.screen.height);
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Buscar coincidencia en pantallas conocidas de iPhone
+      for (let screen of iPhoneScreens) {
+        // Permite pequeños márgenes de error (±2px)
+        if (Math.abs(width - screen.width) <= 2 && 
+            Math.abs(height - screen.height) <= 2 &&
+            Math.abs(dpr - screen.dpr) <= 0.5) {
+          return true;
+        }
+      }
+      
+      // Fallback: si tiene User Agent de iPhone pero no coincide exactamente,
+      // seguir considerándolo iPhone (puede ser dispositivo futuro)
+      return true;
+    }
+    
+    // Función para detectar si es iPad basado en parámetros de pantalla
+    function isDeviceIPad() {
+      if (!isIPad) return false;
+      
+      // iPad típicamente tiene:
+      // - 1024×768 (iPad mini portrait, DPR 2)
+      // - 1024×1366 (iPad Air/Pro 11" portrait, DPR 2)
+      // - 768×1024 (iPad mini landscape, DPR 2)
+      // - Siempre mayor resolución que iPhone
+      
+      const width = Math.min(window.screen.width, window.screen.height);
+      const height = Math.max(window.screen.width, window.screen.height);
+      
+      // iPad siempre tiene dimensión mínima de 768px
+      return width >= 768;
+    }
+    
+    // Determinar dispositivo
+    const finalIsIPhone = isDeviceIPhone();
+    const finalIsIPad = isDeviceIPad();
+    
+    if (finalIsIPad) {
+      document.documentElement.classList.add('is-ipad');
+    } else if (finalIsIPhone) {
+      document.documentElement.classList.add('is-iphone');
+    }
+    
+    // Log para debugging (comentar en producción)
+    // console.log('Device Detection:', {
+    //   userAgent: ua.substring(0, 50),
+    //   isIPad: finalIsIPad,
+    //   isIPhone: finalIsIPhone,
+    //   screenWidth: window.screen.width,
+    //   screenHeight: window.screen.height,
+    //   dpr: window.devicePixelRatio
+    // });
+  })();
+</script>
+
+
+<!-- Forzar modo landscape en iPhone, permitir rotación libre en iPad -->
 <script>
   (function() {
     // Detección mejorada de dispositivos iOS modernos
     const ua = navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isIPad = /iPad/.test(ua);
+    const isIPhone = /iPhone/.test(ua);
     const isModernIPhone = /iPhone (1[6-7]|16|17)/.test(ua) || 
-                           (isIOS && /OS (18|17|16)/.test(ua));
+                           (isIPhone && /OS (18|17|16)/.test(ua));
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
     
-    if (isMobile) {
-      // Solicitar bloqueo a landscape (funciona mejor en iOS 18+)
+    // Parámetros de pantalla conocidos de iPhone (en portrait)
+    // Verificados en: ios-resolution.com, webmobilefirst.com
+    const iPhoneScreens = [
+      { width: 320, height: 568, dpr: 2 },  // iPhone 5/5c/5s, SE (1ª gen)
+      { width: 375, height: 667, dpr: 2 },  // iPhone 6/6s/7/8, SE (2ª/3ª gen)
+      { width: 414, height: 736, dpr: 3 },  // iPhone 6+/7+/8+ Plus
+      { width: 375, height: 812, dpr: 3 },  // iPhone X/XS/11 Pro
+      { width: 414, height: 896, dpr: 2 },  // iPhone XR/11
+      { width: 414, height: 896, dpr: 3 },  // iPhone XS Max/11 Pro Max
+      { width: 360, height: 780, dpr: 3 },  // iPhone 12/13 mini
+      { width: 390, height: 844, dpr: 3 },  // iPhone 12/13/14 Pro
+      { width: 428, height: 926, dpr: 3 },  // iPhone 12+/13+/14+ Plus
+      { width: 393, height: 852, dpr: 3 },  // iPhone 14 Pro/15/15 Pro/16
+      { width: 430, height: 932, dpr: 3 },  // iPhone 15+/15 Pro Max/16 Plus
+      { width: 402, height: 874, dpr: 3 },  // iPhone 16 Pro
+      { width: 440, height: 956, dpr: 3 }   // iPhone 16 Pro Max
+    ];
+    
+    // Verificar si es realmente un iPhone usando parámetros de pantalla
+    function isReallyIPhone() {
+      if (!isIPhone) return false;
+      
+      const width = Math.min(window.screen.width, window.screen.height);
+      const height = Math.max(window.screen.width, window.screen.height);
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Buscar coincidencia en pantallas conocidas
+      for (let screen of iPhoneScreens) {
+        if (Math.abs(width - screen.width) <= 2 && 
+            Math.abs(height - screen.height) <= 2 &&
+            Math.abs(dpr - screen.dpr) <= 0.5) {
+          return true;
+        }
+      }
+      
+      // Fallback: si no coincide exactamente pero tiene User Agent de iPhone
+      return true;
+    }
+    
+    if (isMobile && isReallyIPhone() && !isIPad) {
+      // SOLO para iPhone: bloquear a landscape
       if (window.screen?.orientation?.lock) {
         try {
           // Intenta landscape-primary primero
@@ -46,7 +200,7 @@
         }
       }
       
-      // Mostrar overlay bloqueante si está en portrait
+      // Mostrar overlay bloqueante si está en portrait (SOLO IPHONE)
       function checkOrientation() {
         const isPortrait = window.innerHeight > window.innerWidth;
         let overlay = document.getElementById('portraitBlockOverlay');
@@ -142,19 +296,37 @@
         }
       });
     }
+    // iPad: NO hacer nada, permitir rotación libre
+  })();
+</script>      }
+      
+      // Verificar inmediatamente si el DOM está listo
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeOrientationCheck);
+      } else {
+        setTimeout(initializeOrientationCheck, 100);
+      }
+      
+      // Verificación periódica (optimizada para iPhone 16/17)
+      const checkInterval = setInterval(() => {
+        checkOrientation();
+      }, 400); // 400ms es mejor que 500ms para respuesta rápida
+      
+      // Limpiar intervalo si se desactiva el tab
+      if (document.hidden) {
+        clearInterval(checkInterval);
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          checkOrientation(); // Verificar cuando vuelve al focus
+        }
+      });
+    }
   })();
 </script>
 
 <!-- PWA Manifest removed to disable installability/banner -->
 <!-- <link rel="manifest" href="manifest.json" /> -->
-
-<!-- Icons -->
-<!-- Favicon for browsers -->
-<link rel="icon" type="image/x-icon" href="Logo-ITAMEX.ico" />
-<!-- Apple/iOS home screen icon (PNG recommended). If missing, iOS will fallback to a screenshot. -->
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-<!-- Safari pinned tab (macOS) -->
-<link rel="mask-icon" href="Logo-ITAMEX.svg" color="#002b5c" />
 
 <!-- Web Bridge: Reemplaza Electron API con localStorage -->
 <script src="web-bridge.js"></script>
@@ -714,21 +886,20 @@ try {
     }
   }
   
-  /* Bloquear portrait en móviles: ocultar contenido cuando está en portrait */
+  /* Bloquear portrait SOLO en iPhone: ocultar contenido cuando está en portrait */
   @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
-    /* En móviles en portrait, oscurecer y bloquear toda interacción */
-    body > header,
-    body > .container,
-    body > section,
-    body > div:not(#portraitBlockOverlay) {
+    html.is-iphone body > header,
+    html.is-iphone body > .container,
+    html.is-iphone body > section,
+    html.is-iphone body > div:not(#portraitBlockOverlay) {
       opacity: 0.15 !important;
       pointer-events: none !important;
       visibility: hidden !important;
     }
   }
   
-  /* Asegurar que el overlay siempre esté visible incluso en portrait */
-  #portraitBlockOverlay {
+  /* Asegurar que el overlay siempre esté visible incluso en portrait (SOLO IPHONE) */
+  html.is-iphone #portraitBlockOverlay {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -737,6 +908,8 @@ try {
     z-index: 999999 !important;
     visibility: visible !important;
   }
+  
+  /* iPad: permitir rotación libre, sin bloqueos - no hay estilos especiales necesarios */
   
   /* Optimizaciones de rendimiento para iOS 18 */
   @supports (backdrop-filter: blur(1px)) {
@@ -1419,20 +1592,59 @@ try {
 </head>
 <body>
 
-<!-- Script de emergencia para iPhone: asegurar overlay en portrait -->
+<!-- Script de emergencia para iPhone: asegurar overlay en portrait (SOLO IPHONE, NO IPAD) -->
 <script>
   (function() {
-    // Detección mejorada de iOS moderno (iPhone 16, 17, iOS 18)
+    // Detección mejorada de iOS moderno usando parámetros de pantalla
     const ua = navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua);
-    const isModernIPhone = /iPhone (1[6-7]|16|17)/.test(ua) || 
-                           (isIOS && /OS (18|17|16)_/.test(ua));
+    const isIPad = /iPad/.test(ua);
+    const isIPhone = /iPhone/.test(ua);
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    
+    // Parámetros de pantalla conocidos de iPhone (en portrait)
+    // Verificados en: ios-resolution.com, webmobilefirst.com
+    const iPhoneScreens = [
+      { width: 320, height: 568, dpr: 2 },  // iPhone 5/5c/5s, SE (1ª gen)
+      { width: 375, height: 667, dpr: 2 },  // iPhone 6/6s/7/8, SE (2ª/3ª gen)
+      { width: 414, height: 736, dpr: 3 },  // iPhone 6+/7+/8+ Plus
+      { width: 375, height: 812, dpr: 3 },  // iPhone X/XS/11 Pro
+      { width: 414, height: 896, dpr: 2 },  // iPhone XR/11
+      { width: 414, height: 896, dpr: 3 },  // iPhone XS Max/11 Pro Max
+      { width: 360, height: 780, dpr: 3 },  // iPhone 12/13 mini
+      { width: 390, height: 844, dpr: 3 },  // iPhone 12/13/14 Pro
+      { width: 428, height: 926, dpr: 3 },  // iPhone 12+/13+/14+ Plus
+      { width: 393, height: 852, dpr: 3 },  // iPhone 14 Pro/15/15 Pro/16
+      { width: 430, height: 932, dpr: 3 },  // iPhone 15+/15 Pro Max/16 Plus
+      { width: 402, height: 874, dpr: 3 },  // iPhone 16 Pro
+      { width: 440, height: 956, dpr: 3 }   // iPhone 16 Pro Max
+    ];
+    
+    // Verificar si es realmente un iPhone
+    function isReallyIPhone() {
+      if (!isIPhone) return false;
+      
+      const width = Math.min(window.screen.width, window.screen.height);
+      const height = Math.max(window.screen.width, window.screen.height);
+      const dpr = window.devicePixelRatio || 1;
+      
+      for (let screen of iPhoneScreens) {
+        if (Math.abs(width - screen.width) <= 2 && 
+            Math.abs(height - screen.height) <= 2 &&
+            Math.abs(dpr - screen.dpr) <= 0.5) {
+          return true;
+        }
+      }
+      
+      // Fallback
+      return true;
+    }
     
     // Flag para evitar múltiples creaciones
     let overlayCreated = false;
     
-    if (isMobile) {
+    // SOLO IPHONE: no aplicar restricción en iPad
+    if (isMobile && isReallyIPhone() && !isIPad) {
       function ensureOverlayOnPortrait() {
         const isPortrait = window.innerHeight > window.innerWidth;
         const overlay = document.getElementById('portraitBlockOverlay');
