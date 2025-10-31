@@ -21,17 +21,28 @@
 <!-- Forzar modo landscape en móviles y bloquear portrait -->
 <script>
   (function() {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Detección mejorada de dispositivos iOS modernos
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isModernIPhone = /iPhone (1[6-7]|16|17)/.test(ua) || 
+                           (isIOS && /OS (18|17|16)/.test(ua));
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
     
     if (isMobile) {
-      // Solicitar bloqueo a landscape (funciona en PWA/instaladas)
-      if (window.screen && window.screen.orientation) {
+      // Solicitar bloqueo a landscape (funciona mejor en iOS 18+)
+      if (window.screen?.orientation?.lock) {
         try {
-          window.screen.orientation.lock('landscape-primary').catch(err => {
-            console.warn('No se pudo bloquear a landscape:', err);
-          });
+          // Intenta landscape-primary primero
+          window.screen.orientation.lock('landscape-primary')
+            .catch(() => {
+              // Si falla, intenta landscape-secondary
+              return window.screen.orientation.lock('landscape');
+            })
+            .catch(err => {
+              console.debug('Orientation lock not available:', err.message);
+            });
         } catch (e) {
-          console.warn('Lock orientation no soportado:', e);
+          console.debug('Lock orientation error:', e.message);
         }
       }
       
@@ -72,7 +83,7 @@
                 </p>
               </div>
             `;
-            // Agregar animación
+            // Agregar animación si no existe
             if (!document.getElementById('portraitOverlayStyles')) {
               const style = document.createElement('style');
               style.id = 'portraitOverlayStyles';
@@ -91,27 +102,45 @@
         }
       }
       
-      // Función para hacer la verificación más robusta
+      // Función para inicializar
       function initializeOrientationCheck() {
         checkOrientation();
       }
       
-      // Verificar múltiples eventos y momentos
-      window.addEventListener('load', checkOrientation, { passive: true });
-      window.addEventListener('orientationchange', checkOrientation, { passive: true });
-      window.addEventListener('resize', checkOrientation, { passive: true });
-      window.addEventListener('deviceorientation', checkOrientation, { passive: true });
+      // Listeners con opciones optimizadas
+      const listenerOptions = { passive: true, capture: false };
+      
+      window.addEventListener('load', checkOrientation, listenerOptions);
+      window.addEventListener('orientationchange', checkOrientation, listenerOptions);
+      window.addEventListener('resize', checkOrientation, listenerOptions);
+      window.addEventListener('deviceorientation', checkOrientation, listenerOptions);
+      
+      // Para iOS 18+, agregar listener para visualviewport (experimental)
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', checkOrientation, listenerOptions);
+      }
       
       // Verificar inmediatamente si el DOM está listo
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeOrientationCheck);
       } else {
-        // DOM ya está listo
         setTimeout(initializeOrientationCheck, 100);
       }
       
-      // Verificación periódica cada 500ms para iOS
-      setInterval(checkOrientation, 500);
+      // Verificación periódica (optimizada para iPhone 16/17)
+      const checkInterval = setInterval(() => {
+        checkOrientation();
+      }, 400); // 400ms es mejor que 500ms para respuesta rápida
+      
+      // Limpiar intervalo si se desactiva el tab
+      if (document.hidden) {
+        clearInterval(checkInterval);
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          checkOrientation(); // Verificar cuando vuelve al focus
+        }
+      });
     }
   })();
 </script>
@@ -675,6 +704,16 @@ try {
   html,body{font-size:16px}
   body{font-family:Inter,Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
   
+  /* Optimizaciones para iPhone 16/17 y iOS 18 en portrait */
+  @supports (padding: max(0px)) {
+    body {
+      padding-top: max(0px, env(safe-area-inset-top));
+      padding-bottom: max(0px, env(safe-area-inset-bottom));
+      padding-left: max(0px, env(safe-area-inset-left));
+      padding-right: max(0px, env(safe-area-inset-right));
+    }
+  }
+  
   /* Bloquear portrait en móviles: ocultar contenido cuando está en portrait */
   @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
     /* En móviles en portrait, oscurecer y bloquear toda interacción */
@@ -682,8 +721,9 @@ try {
     body > .container,
     body > section,
     body > div:not(#portraitBlockOverlay) {
-      opacity: 0.2 !important;
+      opacity: 0.15 !important;
       pointer-events: none !important;
+      visibility: hidden !important;
     }
   }
   
@@ -694,7 +734,25 @@ try {
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    z-index: 99999 !important;
+    z-index: 999999 !important;
+    visibility: visible !important;
+  }
+  
+  /* Optimizaciones de rendimiento para iOS 18 */
+  @supports (backdrop-filter: blur(1px)) {
+    #portraitBlockOverlay {
+      will-change: opacity;
+      contain: layout style paint;
+    }
+  }
+  
+  /* Prevenir safari zoom en inputs */
+  @supports (-webkit-touch-callout: none) {
+    input, select, textarea {
+      font-size: 16px !important;
+      -webkit-user-select: text;
+      user-select: text;
+    }
   }
   header{background:linear-gradient(90deg,#0b2d66,#154ea8);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
   header h1{margin:0;font-size:18px;font-weight:700}
@@ -1364,24 +1422,31 @@ try {
 <!-- Script de emergencia para iPhone: asegurar overlay en portrait -->
 <script>
   (function() {
-    // Detección de iOS específica
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Detección mejorada de iOS moderno (iPhone 16, 17, iOS 18)
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isModernIPhone = /iPhone (1[6-7]|16|17)/.test(ua) || 
+                           (isIOS && /OS (18|17|16)_/.test(ua));
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    
+    // Flag para evitar múltiples creaciones
+    let overlayCreated = false;
     
     if (isMobile) {
       function ensureOverlayOnPortrait() {
         const isPortrait = window.innerHeight > window.innerWidth;
         const overlay = document.getElementById('portraitBlockOverlay');
         
-        if (isPortrait && !overlay && document.body) {
+        if (isPortrait && !overlay && document.body && !overlayCreated) {
+          overlayCreated = true;
           const div = document.createElement('div');
           div.id = 'portraitBlockOverlay';
           div.style.cssText = `
             position: fixed;
             top: 0 !important;
             left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
+            width: 100% !important;
+            height: 100% !important;
             background: linear-gradient(135deg, #002b5c 0%, #154ea8 100%);
             display: flex;
             align-items: center;
@@ -1392,39 +1457,106 @@ try {
             padding: 20px;
             margin: 0;
             border: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
           `;
           div.innerHTML = `
-            <div style="max-width: 300px;">
+            <div style="max-width: 300px; animation: fadeInOverlay 0.3s ease-in;">
               <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
-              <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff;">Gira el dispositivo</h2>
-              <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.9); line-height: 1.5;">
+              <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff; font-weight: 700;">Gira el dispositivo</h2>
+              <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.95); line-height: 1.6; font-weight: 500;">
                 Esta aplicación solo funciona en modo <strong>horizontal (landscape)</strong>
               </p>
-              <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.7);">
+              <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.4;">
                 Gira tu dispositivo para continuar
               </p>
             </div>
           `;
+          
+          // Agregar estilos de animación si no existen
+          if (!document.getElementById('portraitOverlayAnimStyles')) {
+            const style = document.createElement('style');
+            style.id = 'portraitOverlayAnimStyles';
+            style.textContent = `
+              @keyframes fadeInOverlay {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              #portraitBlockOverlay {
+                will-change: opacity;
+              }
+            `;
+            document.head.appendChild(style);
+          }
+          
           document.body.appendChild(div);
           document.body.style.overflow = 'hidden';
+          document.body.style.position = 'fixed';
+          document.body.style.width = '100%';
+          
         } else if (!isPortrait && overlay) {
+          overlayCreated = false;
           overlay.remove();
           document.body.style.overflow = '';
+          document.body.style.position = '';
+          document.body.style.width = '';
         }
       }
       
       // Ejecutar de inmediato
       ensureOverlayOnPortrait();
       
-      // Escuchar cambios
-      window.addEventListener('orientationchange', ensureOverlayOnPortrait, { passive: true });
-      window.addEventListener('resize', ensureOverlayOnPortrait, { passive: true });
-      window.addEventListener('load', ensureOverlayOnPortrait, { passive: true });
+      // Opciones de listener optimizadas
+      const listenerOptions = { passive: true, capture: false };
       
-      // Para iOS: verificación cada 300ms
-      if (isIOS) {
-        setInterval(ensureOverlayOnPortrait, 300);
+      // Escuchar cambios con prioridad
+      window.addEventListener('orientationchange', ensureOverlayOnPortrait, listenerOptions);
+      window.addEventListener('resize', ensureOverlayOnPortrait, listenerOptions);
+      window.addEventListener('load', ensureOverlayOnPortrait, listenerOptions);
+      
+      // Para iOS 18+: Visual Viewport API
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', ensureOverlayOnPortrait, listenerOptions);
+        window.visualViewport.addEventListener('scroll', ensureOverlayOnPortrait, listenerOptions);
       }
+      
+      // Verificación periódica optimizada para iPhone moderno
+      let checkIntervalId;
+      
+      function startPeriodicCheck() {
+        if (!checkIntervalId) {
+          // 250ms para respuesta ultra-rápida en iPhone 16/17
+          checkIntervalId = setInterval(ensureOverlayOnPortrait, 250);
+        }
+      }
+      
+      function stopPeriodicCheck() {
+        if (checkIntervalId) {
+          clearInterval(checkIntervalId);
+          checkIntervalId = null;
+        }
+      }
+      
+      // Empezar verificación
+      startPeriodicCheck();
+      
+      // Pausar cuando el tab no está en foco (ahorra batería)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopPeriodicCheck();
+        } else {
+          ensureOverlayOnPortrait();
+          startPeriodicCheck();
+        }
+      }, { passive: true });
+      
+      // Pausar cuando la app entra en background (iOS)
+      window.addEventListener('blur', stopPeriodicCheck, { passive: true });
+      window.addEventListener('focus', () => {
+        ensureOverlayOnPortrait();
+        startPeriodicCheck();
+      }, { passive: true });
     }
   })();
 </script>
@@ -1672,7 +1804,6 @@ try {
         </div>
         <div style="white-space:nowrap;min-width:140px">
           <label class="small"><input type="checkbox" id="chkTrDeltas"> Show deltas vs first timepoint</label>
-          <div class="small" style="margin-top:6px;color:#666">Select up to 4 variables (one per dropdown). Layout is 2×2 independent panels with separate axes.</div>
         </div>
       </div>
       <div id="plotTr"></div>
