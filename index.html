@@ -301,31 +301,6 @@
     }
     // iPad: NO hacer nada, permitir rotación libre
   })();
-</script>      }
-      
-      // Verificar inmediatamente si el DOM está listo
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeOrientationCheck);
-      } else {
-        setTimeout(initializeOrientationCheck, 100);
-      }
-      
-      // Verificación periódica (optimizada para iPhone 16/17)
-      const checkInterval = setInterval(() => {
-        checkOrientation();
-      }, 400); // 400ms es mejor que 500ms para respuesta rápida
-      
-      // Limpiar intervalo si se desactiva el tab
-      if (document.hidden) {
-        clearInterval(checkInterval);
-      }
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-          checkOrientation(); // Verificar cuando vuelve al focus
-        }
-      });
-    }
-  })();
 </script>
 
 <!-- PWA Manifest removed to disable installability/banner -->
