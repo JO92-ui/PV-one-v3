@@ -119,14 +119,14 @@
     }
     
     // Log para debugging (comentar en producción)
-    // console.log('Device Detection:', {
-    //   userAgent: ua.substring(0, 50),
-    //   isIPad: finalIsIPad,
-    //   isIPhone: finalIsIPhone,
-    //   screenWidth: window.screen.width,
-    //   screenHeight: window.screen.height,
-    //   dpr: window.devicePixelRatio
-    // });
+    console.log('Device Detection:', {
+      userAgent: ua.substring(0, 50),
+      isIPad: finalIsIPad,
+      isIPhone: finalIsIPhone,
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      dpr: window.devicePixelRatio
+    });
   })();
 </script>
 
@@ -184,6 +184,8 @@
     
     if (isMobile && isReallyIPhone() && !isIPad) {
       // SOLO para iPhone: bloquear a landscape
+      console.log('🔒 Bloqueo landscape activado para iPhone');
+      
       if (window.screen?.orientation?.lock) {
         try {
           // Intenta landscape-primary primero
@@ -203,6 +205,7 @@
       // Mostrar overlay bloqueante si está en portrait (SOLO IPHONE)
       function checkOrientation() {
         const isPortrait = window.innerHeight > window.innerWidth;
+        console.log('📱 CheckOrientation:', { isPortrait, innerHeight: window.innerHeight, innerWidth: window.innerWidth });
         let overlay = document.getElementById('portraitBlockOverlay');
         
         if (isPortrait) {
