@@ -38,7 +38,7 @@
       // Mostrar overlay bloqueante si está en portrait
       function checkOrientation() {
         const isPortrait = window.innerHeight > window.innerWidth;
-        const overlay = document.getElementById('portraitBlockOverlay');
+        let overlay = document.getElementById('portraitBlockOverlay');
         
         if (isPortrait) {
           // Crear overlay si no existe
@@ -57,9 +57,11 @@
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               text-align: center;
               padding: 20px;
+              width: 100vw;
+              height: 100vh;
             `;
             div.innerHTML = `
-              <div style="max-width: 300px;">
+              <div style="max-width: 300px; animation: fadeIn 0.3s ease-in;">
                 <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
                 <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff;">Gira el dispositivo</h2>
                 <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.9); line-height: 1.5;">
@@ -70,6 +72,15 @@
                 </p>
               </div>
             `;
+            // Agregar animación
+            if (!document.getElementById('portraitOverlayStyles')) {
+              const style = document.createElement('style');
+              style.id = 'portraitOverlayStyles';
+              style.textContent = `
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+              `;
+              document.head.appendChild(style);
+            }
             document.body.appendChild(div);
           }
         } else {
@@ -80,14 +91,27 @@
         }
       }
       
-      // Verificar orientación inicial
-      window.addEventListener('load', checkOrientation);
-      // Verificar en cada cambio de orientación
-      window.addEventListener('orientationchange', checkOrientation);
-      // Verificar en cada resize
-      window.addEventListener('resize', checkOrientation);
-      // Verificar inmediatamente
-      checkOrientation();
+      // Función para hacer la verificación más robusta
+      function initializeOrientationCheck() {
+        checkOrientation();
+      }
+      
+      // Verificar múltiples eventos y momentos
+      window.addEventListener('load', checkOrientation, { passive: true });
+      window.addEventListener('orientationchange', checkOrientation, { passive: true });
+      window.addEventListener('resize', checkOrientation, { passive: true });
+      window.addEventListener('deviceorientation', checkOrientation, { passive: true });
+      
+      // Verificar inmediatamente si el DOM está listo
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeOrientationCheck);
+      } else {
+        // DOM ya está listo
+        setTimeout(initializeOrientationCheck, 100);
+      }
+      
+      // Verificación periódica cada 500ms para iOS
+      setInterval(checkOrientation, 500);
     }
   })();
 </script>
@@ -652,17 +676,25 @@ try {
   body{font-family:Inter,Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
   
   /* Bloquear portrait en móviles: ocultar contenido cuando está en portrait */
-  @media (orientation: portrait) {
-    /* Para dispositivos móviles detectados */
-    body:has(#portraitBlockOverlay) {
-      overflow: hidden;
+  @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+    /* En móviles en portrait, oscurecer y bloquear toda interacción */
+    body > header,
+    body > .container,
+    body > section,
+    body > div:not(#portraitBlockOverlay) {
+      opacity: 0.2 !important;
+      pointer-events: none !important;
     }
-    /* Prevención adicional: si el overlay está presente, oscurecer la UI */
-    #portraitBlockOverlay ~ header,
-    #portraitBlockOverlay ~ .container {
-      opacity: 0.3;
-      pointer-events: none;
-    }
+  }
+  
+  /* Asegurar que el overlay siempre esté visible incluso en portrait */
+  #portraitBlockOverlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999 !important;
   }
   header{background:linear-gradient(90deg,#0b2d66,#154ea8);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
   header h1{margin:0;font-size:18px;font-weight:700}
@@ -1328,6 +1360,74 @@ try {
 </style>
 </head>
 <body>
+
+<!-- Script de emergencia para iPhone: asegurar overlay en portrait -->
+<script>
+  (function() {
+    // Detección de iOS específica
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      function ensureOverlayOnPortrait() {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const overlay = document.getElementById('portraitBlockOverlay');
+        
+        if (isPortrait && !overlay && document.body) {
+          const div = document.createElement('div');
+          div.id = 'portraitBlockOverlay';
+          div.style.cssText = `
+            position: fixed;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: linear-gradient(135deg, #002b5c 0%, #154ea8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            border: 0;
+          `;
+          div.innerHTML = `
+            <div style="max-width: 300px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
+              <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff;">Gira el dispositivo</h2>
+              <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.9); line-height: 1.5;">
+                Esta aplicación solo funciona en modo <strong>horizontal (landscape)</strong>
+              </p>
+              <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.7);">
+                Gira tu dispositivo para continuar
+              </p>
+            </div>
+          `;
+          document.body.appendChild(div);
+          document.body.style.overflow = 'hidden';
+        } else if (!isPortrait && overlay) {
+          overlay.remove();
+          document.body.style.overflow = '';
+        }
+      }
+      
+      // Ejecutar de inmediato
+      ensureOverlayOnPortrait();
+      
+      // Escuchar cambios
+      window.addEventListener('orientationchange', ensureOverlayOnPortrait, { passive: true });
+      window.addEventListener('resize', ensureOverlayOnPortrait, { passive: true });
+      window.addEventListener('load', ensureOverlayOnPortrait, { passive: true });
+      
+      // Para iOS: verificación cada 300ms
+      if (isIOS) {
+        setInterval(ensureOverlayOnPortrait, 300);
+      }
+    }
+  })();
+</script>
 
 <!-- Fixed top header: PV-One Clinical Dashboard v3.0 -->
 <header id="topHeader" class="top-header">
@@ -6858,9 +6958,22 @@ byId('btnToggleInputs').addEventListener('click', ()=>{
 window.addEventListener('DOMContentLoaded', ()=>{
   // Si no hay TPs, crea dos ejemplos (0h y 6h)
   if(document.querySelectorAll('.tpCard').length===0){
-    addTP({ time:'0', on:true, active:true });
-  addTP({ time:'6', on:true, active:false, MAP:75, SBP:105, DBP:60, PCWP:22, RAP:14, CO:3.4, LVEF:35, Lactate:3.1, Lact:3.1,
-            Norepi:0.06, Dobut:5, IABP:true, prior_therapy:true });
+    // Set patient data (anonymous Impella case)
+    byId('patientName').value = 'Impella Case';
+    byId('ptAge').value = '54';
+    byId('ptSex').value = 'M';
+    document.querySelector('input[name="csType"][value="ami"]').checked = true;
+    byId('ptH').value = '1.65';
+    byId('ptW').value = '85';
+    
+    // Create timepoints with real Impella hemodynamic data (7 timepoints: 0h, 6h, 12h, 18h, 24h, 48h, 72h)
+    addTP({ time:'0', on:true, active:true, HR:65, SBP:100, DBP:80, RAP:11, PCWP:23, sPAP:36, dPAP:21, CO:3.15, LVEF:23.9, EDV:163, ESV:124, Lactate:2.8, Cr:1.85, SvO2:61.4, pH:7.37, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0.05, Epinephrine:0, Dobutamine:0, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0, Impella_level:2, Impella_flow_Lmin:3.4 });
+    addTP({ time:'6', on:true, active:false, HR:80, SBP:97, DBP:67, RAP:1, PCWP:5, sPAP:34, dPAP:10, CO:4.91, LVEF:27.3, EDV:154, ESV:112, Lactate:2.9, Cr:1.68, SvO2:75.4, pH:7.58, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0, Epinephrine:0, Dobutamine:6.5, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0, Impella_level:1, Impella_flow_Lmin:2.8 });
+    addTP({ time:'12', on:true, active:false, HR:74, SBP:90, DBP:66, RAP:4, PCWP:12, sPAP:32, dPAP:16, CO:5.05, LVEF:25, EDV:172, ESV:129, Lactate:1.5, Cr:1.58, SvO2:73.4, pH:7.52, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0, Epinephrine:0, Dobutamine:4.12, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0, Impella_level:1, Impella_flow_Lmin:2.5 });
+    addTP({ time:'18', on:true, active:false, HR:81, SBP:106, DBP:74, RAP:5, PCWP:14, sPAP:44, dPAP:19, CO:4.95, LVEF:25.9, EDV:147, ESV:109, Lactate:1.3, Cr:1.38, SvO2:66.5, pH:7.55, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0.06, Epinephrine:0, Dobutamine:3, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0 });
+    addTP({ time:'24', on:true, active:false, HR:80, SBP:106, DBP:70, RAP:11, PCWP:25, sPAP:45, dPAP:27, CO:3.53, LVEF:29, EDV:191, ESV:135, Lactate:1.1, Cr:1.37, SvO2:73, pH:7.44, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0.06, Epinephrine:0, Dobutamine:0, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0 });
+    addTP({ time:'48', on:true, active:false, HR:75, SBP:92, DBP:75, RAP:12, PCWP:19, sPAP:36, dPAP:24, CO:3.27, LVEF:29.9, EDV:184, ESV:129, Lactate:1.1, Cr:1.17, SvO2:63.8, pH:7.47, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0, Epinephrine:0, Dobutamine:0, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0 });
+    addTP({ time:'72', on:true, active:false, HR:84, SBP:103, DBP:75, RAP:4, PCWP:18, sPAP:32, dPAP:21, CO:3.48, LVEF:32, EDV:191, ESV:135, Lactate:1.1, Cr:1.12, SvO2:68, pH:7.47, ABP:true, Impella:true, prior_therapy:true, mcs_for_CS:true, Norepinephrine:0, Epinephrine:0, Dobutamine:0, Dopamine:0, Milrinone:0, Vasopressin:0, Levosimendan:0 });
   }
   applyReadOnly();
   generateAll();
