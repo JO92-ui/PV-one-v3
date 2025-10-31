@@ -214,29 +214,38 @@
             const div = document.createElement('div');
             div.id = 'portraitBlockOverlay';
             div.style.cssText = `
-              position: fixed;
-              top: 0; left: 0; right: 0; bottom: 0;
-              background: linear-gradient(135deg, #002b5c 0%, #154ea8 100%);
-              color: #fff;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              z-index: 99999;
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              text-align: center;
-              padding: 20px;
-              width: 100vw;
-              height: 100vh;
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              background: linear-gradient(135deg, #002b5c 0%, #154ea8 100%) !important;
+              color: #fff !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              z-index: 999999 !important;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+              text-align: center !important;
+              padding: 20px !important;
+              margin: 0 !important;
+              border: 0 !important;
+              pointer-events: auto !important;
+              user-select: none !important;
+              -webkit-user-select: none !important;
+              touch-action: none !important;
             `;
             div.innerHTML = `
               <div style="max-width: 300px; animation: fadeIn 0.3s ease-in;">
                 <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
-                <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff;">Gira el dispositivo</h2>
-                <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.9); line-height: 1.5;">
+                <h2 style="margin: 0 0 16px 0; font-size: 28px; color: #fff; font-weight: 700;">Gira el dispositivo</h2>
+                <p style="margin: 0; font-size: 18px; color: rgba(255,255,255,0.95); line-height: 1.5; font-weight: 500;">
                   Esta aplicación solo funciona en modo <strong>horizontal (landscape)</strong>
                 </p>
-                <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.7);">
-                  Gira tu dispositivo para continuar
+                <p style="margin: 16px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.8);">
+                  Gira tu dispositivo para continuar →
                 </p>
               </div>
             `;
@@ -246,15 +255,28 @@
               style.id = 'portraitOverlayStyles';
               style.textContent = `
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                #portraitBlockOverlay * { pointer-events: none !important; }
               `;
               document.head.appendChild(style);
             }
+            // Agregar al body y también al documentElement como fallback
             document.body.appendChild(div);
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+            
+            // Bloquear todos los scrolls
+            document.addEventListener('touchmove', function(e) {
+              if (document.getElementById('portraitBlockOverlay')) {
+                e.preventDefault();
+              }
+            }, { passive: false });
           }
         } else {
           // Remover overlay si existe
           if (overlay) {
             overlay.remove();
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
           }
         }
       }
@@ -266,15 +288,19 @@
       
       // Listeners con opciones optimizadas
       const listenerOptions = { passive: true, capture: false };
+      const nonPassiveOptions = { passive: false, capture: false };
       
       window.addEventListener('load', checkOrientation, listenerOptions);
       window.addEventListener('orientationchange', checkOrientation, listenerOptions);
       window.addEventListener('resize', checkOrientation, listenerOptions);
       window.addEventListener('deviceorientation', checkOrientation, listenerOptions);
+      window.addEventListener('scroll', checkOrientation, nonPassiveOptions);
+      document.addEventListener('scroll', checkOrientation, nonPassiveOptions);
       
       // Para iOS 18+, agregar listener para visualviewport (experimental)
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', checkOrientation, listenerOptions);
+        window.visualViewport.addEventListener('scroll', checkOrientation, listenerOptions);
       }
       
       // Verificar inmediatamente si el DOM está listo
@@ -284,10 +310,10 @@
         setTimeout(initializeOrientationCheck, 100);
       }
       
-      // Verificación periódica (optimizada para iPhone 16/17)
+      // Verificación periódica MÁS AGRESIVA (cada 200ms para respuesta ultra-rápida)
       const checkInterval = setInterval(() => {
         checkOrientation();
-      }, 400); // 400ms es mejor que 500ms para respuesta rápida
+      }, 200); // 200ms para respuesta MÁS rápida en iPhone 16
       
       // Limpiar intervalo si se desactiva el tab
       if (document.hidden) {
@@ -296,6 +322,8 @@
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
           checkOrientation(); // Verificar cuando vuelve al focus
+        } else {
+          clearInterval(checkInterval);
         }
       });
     }
