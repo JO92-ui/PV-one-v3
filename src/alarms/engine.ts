@@ -31,7 +31,6 @@ export function getActiveAlarms(prev: Record<string, any>, curr: Record<string, 
   // normalize inputs
   const nPrev = normalizeKeys(prev || {});
   const nCurr = normalizeKeys(curr || {});
-  const pct = computePercentChanges(nCurr, nPrev, ['CPO','CI']);
 
   // load rules: accept provided rules or try to read global window.ALARM_RULES
   let alarmRules: AlarmGroup[] = rules || ([] as AlarmGroup[]);

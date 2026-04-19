@@ -14,7 +14,7 @@
       const group = { subtitle: 'Custom rules (localStorage)', items: [] };
       parsed.forEach((r, idx) => {
         // allow various field names (expression, expr, rule)
-        const expr = r.expression || r.expr || r.rule || r.expr || r.expression || '';
+        const expr = r.expression || r.expr || r.rule || '';
         const item = Object.assign({}, r);
         if(!item.expr && expr) item.expr = expr;
         if(!item.label && item.name) item.label = item.name;

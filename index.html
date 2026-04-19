@@ -3362,7 +3362,7 @@ function compileAlarmExpr(expr){
   const stringLiterals = [];
   e = e.replace(/(['"])(.*?)\1/g, function(m){ stringLiterals.push(m); return '__STR_REPL_' + (stringLiterals.length-1) + '__'; });
 
-  const helpers = ['vis','first','last','win6','win12','win24','computeRollingMetricsFor','CountTrue','Delta','failedWeans','Math','prev','isRising','isDecreasing','Inotrope_combination','Lactate_rising','Lactate_decreasing','Inotrope_combination'];
+  const helpers = ['vis','first','last','win6','win12','win24','computeRollingMetricsFor','CountTrue','Delta','failedWeans','Math','prev','isRising','isDecreasing','Inotrope_combination','Lactate_rising','Lactate_decreasing'];
   e = e.replace(/\b([A-Za-z_]\w*)\b/g, (m)=>{
     // if this token is one of our string-literal placeholders, leave it alone
     if(/^__STR_REPL_\d+__$/.test(m)) return m;
@@ -3609,8 +3609,13 @@ function calcOne(i){
       OHCA: !!byId(`t_ohca_${i}`)?.checked,
       prior_therapy: !!byId(`t_prev_${i}`)?.checked,
       mcs_for_CS: !!byId(`t_mcs_cs_${i}`)?.checked,
-      devicesOn: 0, drugsOn: 0
+      devs: {}, doses: {}
     };
+    // read devices and doses for correct drugsOn/devicesOn counts
+    try{ (window.DEV_KEYS||['IABP','Impella','ECMO','VAD']).forEach(k=> tp.devs[k] = !!byId(`t_dev_${k}_${i}`)?.checked); }catch(e){}
+    try{ Object.keys(window.DOSE_KEYS||{}).forEach(k=> tp.doses[k] = parseFloat(byId(`t_dose_${k}_${i}`)?.value)||0); }catch(e){}
+    tp.devicesOn = Object.values(tp.devs).filter(Boolean).length;
+    tp.drugsOn   = Object.values(tp.doses).filter(v=>v>0).length;
     // read lab/device fields that are not always provided by the centralized logic module
     try{
       const vcr = byId(`t_cr_${i}`)?.value; const ncr = parseFloat(vcr); tp.creatinine = Number.isFinite(ncr)? ncr : (vcr? vcr : null);
@@ -4164,17 +4169,17 @@ function renderAlarms(all, targetId){
       }
     }
     
-    // Direct DOM mapping for medications
-    const dobutInput = document.getElementById(`t_dose_Dobut_${activeIndex}`);
+    // Direct DOM mapping for medications (use canonical full-name IDs)
+    const dobutInput = document.getElementById(`t_dose_Dobutamine_${activeIndex}`);
     if(dobutInput && dobutInput.value !== '') {
       const dobutValue = parseFloat(dobutInput.value);
-      if(!isNaN(dobutValue)) act.Dobut = dobutValue;
+      if(!isNaN(dobutValue)) { act.Dobutamine = dobutValue; act.Dobut = dobutValue; }
     }
     
-    const dopaInput = document.getElementById(`t_dose_Dopa_${activeIndex}`);
+    const dopaInput = document.getElementById(`t_dose_Dopamine_${activeIndex}`);
     if(dopaInput && dopaInput.value !== '') {
       const dopaValue = parseFloat(dopaInput.value);
-      if(!isNaN(dopaValue)) act.Dopa = dopaValue;
+      if(!isNaN(dopaValue)) { act.Dopamine = dopaValue; act.Dopa = dopaValue; }
     }
     
     const milrinoneInput = document.getElementById(`t_dose_Milrinone_${activeIndex}`);
@@ -4183,10 +4188,10 @@ function renderAlarms(all, targetId){
       if(!isNaN(milrinoneValue)) act.Milrinone = milrinoneValue;
     }
     
-    const norepiInput = document.getElementById(`t_dose_Norepi_${activeIndex}`);
+    const norepiInput = document.getElementById(`t_dose_Norepinephrine_${activeIndex}`);
     if(norepiInput && norepiInput.value !== '') {
       const norepiValue = parseFloat(norepiInput.value);
-      if(!isNaN(norepiValue)) act.Norepi = norepiValue;
+      if(!isNaN(norepiValue)) { act.Norepinephrine = norepiValue; act.Norepi = norepiValue; }
     }
   }
   
@@ -6246,12 +6251,12 @@ function renderSupportTable(all){
     {name:'Vasopressors active (count)', vals: vis.map(r=>r.pressorsOn), units:'n'},
     {name:'Devices active (count)', vals: vis.map(r=>r.devicesOn), units:'n'},
     {name:'LVIS (index)', vals: vis.map(r=>Number.isFinite(r.LVIS)?r.LVIS.toFixed(2):''), units:'—'},
-    {name:'Dobutamine', vals: vis.map(r=>get(r,'Dobut')), units:'µg/kg/min'},
-    {name:'Dopamine', vals: vis.map(r=>get(r,'Dopa')), units:'µg/kg/min'},
+    {name:'Dobutamine', vals: vis.map(r=>get(r,'Dobutamine')), units:'µg/kg/min'},
+    {name:'Dopamine', vals: vis.map(r=>get(r,'Dopamine')), units:'µg/kg/min'},
     {name:'Milrinone', vals: vis.map(r=>get(r,'Milrinone')), units:'µg/kg/min'},
     {name:'Levosimendan', vals: vis.map(r=>get(r,'Levosimendan')), units:'µg/kg/min'},
-    {name:'Epinephrine', vals: vis.map(r=>get(r,'Epi')), units:'µg/kg/min'},
-    {name:'Norepinephrine', vals: vis.map(r=>get(r,'Norepi')), units:'µg/kg/min'},
+    {name:'Epinephrine', vals: vis.map(r=>get(r,'Epinephrine')), units:'µg/kg/min'},
+    {name:'Norepinephrine', vals: vis.map(r=>get(r,'Norepinephrine')), units:'µg/kg/min'},
     {name:'Vasopressin', vals: vis.map(r=>get(r,'Vasopressin')), units:'U/min'},
     {name:'Devices (IABP/Impella/ECMO/VAD)', vals: vis.map(r=>{
       const on = Object.entries(r.devs).filter(([k,v])=>v).map(([k])=>k).join('·');
@@ -6272,7 +6277,7 @@ function clinicalBuckets(r){
   const highPWP = Number.isFinite(r.PCWP) && r.PCWP>18;
   const highRAP = Number.isFinite(r.RAP) && r.RAP>12;
   const biCong = highPWP && highRAP;
-  const highLac = Number.isFinite(r.Lact) && r.Lact>2;
+  const _lacVal = r.Lactate ?? r.Lact; const highLac = Number.isFinite(_lacVal) && _lacVal>2;
   const acid = Number.isFinite(r.pH) && r.pH<7.30;
   return {lowCI, highPWP, highRAP, biCong, highLac, acid};
 }
@@ -6796,7 +6801,7 @@ function wireSummaryFilterControls(){
       a.href = URL.createObjectURL(blob);
       const patientName = byId('patientName')?.value || 'patient';
       a.download = `${sanitizeFileName(patientName)}-summary-${lang}.txt`;
-      a.click();
+      document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(a.href);
     });
   }
@@ -6906,7 +6911,7 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   const outName = sanitizeFileName(patientNameVal) || 'pv_patient_results';
   a.download = `${outName}.csv`;
-  a.click(); URL.revokeObjectURL(a.href);
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
 }
 
 function importCSVFile(file){
@@ -7204,6 +7209,7 @@ function gatherState(){
       sPAP: parseFloat(get(`t_spap_${i}`))||0, dPAP: parseFloat(get(`t_dpap_${i}`))||0,
       PCWP: parseFloat(get(`t_pwp_${i}`))||0, RAP: parseFloat(get(`t_rap_${i}`))||0,
       Lact: parseFloat(get(`t_lac_${i}`))||0,
+      Lactate: parseFloat(get(`t_lac_${i}`))||0,
       ALT: parseFloat(get(`t_alt_${i}`))||0, pH: parseFloat(get(`t_ph_${i}`))||0,
       OHCA: !!byId(`t_ohca_${i}`)?.checked,
       prior_therapy: !!byId(`t_prev_${i}`)?.checked,
@@ -7763,7 +7769,7 @@ async function copySummary(id){
 
 function downloadSummary(id, lang){
   const el = byId(id); if(!el) return false; const blob = new Blob([el.textContent||''],{type:'text/plain;charset=utf-8'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${sanitizeFileName(byId('patientName').value||'patient')}-summary-${lang}.txt`; a.click(); URL.revokeObjectURL(a.href);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${sanitizeFileName(byId('patientName').value||'patient')}-summary-${lang}.txt`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
   byId('patientMsg').textContent = 'Summary download started'; setTimeout(()=>byId('patientMsg').textContent='',2000);
   return true;
 }
@@ -7795,7 +7801,7 @@ function downloadAllSummaries(){
   const ids = [{id:'sumES',lang:'es'},{id:'sumEN',lang:'en'},{id:'sumIT',lang:'it'}];
   const content = ids.map(it=> `--- ${it.lang.toUpperCase()} ---\n${byId(it.id)?.textContent||''}`).join('\n\n');
   const blob = new Blob([content],{type:'text/plain;charset=utf-8'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${sanitizeFileName(byId('patientName').value||'patient')}-summaries-all.txt`; a.click(); URL.revokeObjectURL(a.href);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${sanitizeFileName(byId('patientName').value||'patient')}-summaries-all.txt`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
   byId('patientMsg').textContent = 'Download started'; setTimeout(()=>byId('patientMsg').textContent='',2000);
 }
 

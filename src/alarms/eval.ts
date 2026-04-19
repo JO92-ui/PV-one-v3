@@ -25,8 +25,8 @@ export function computePercentChanges(curr: Signals, prev: Signals, keys: string
     if (typeof c === 'number' && typeof p === 'number' && !isNaN(p) && p !== 0) {
       out[`${k}_pct_change`] = ((c - p) / Math.abs(p)) * 100;
     } else if (typeof c === 'number' && typeof p === 'number' && p === 0) {
-      // avoid division by zero, use large change sentinel
-      out[`${k}_pct_change`] = c === p ? 0 : (c > p ? Infinity : -Infinity);
+      // avoid division by zero; cap at ±999 so alarm expressions stay finite
+      out[`${k}_pct_change`] = c === p ? 0 : (c > p ? 999 : -999);
     } else {
       out[`${k}_pct_change`] = NaN;
     }
