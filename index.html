@@ -6870,7 +6870,7 @@ function exportCSV(){
     "time","HR","CO","CI","SVI","CPO","CPI","CPI_adj_RAP",
     "SBP","DBP","MAP","ESP","Ea","Ees","VAC",
     "SVR_dyn","SVRI_dyn_m2",
-    "PCWP","EDV","ESV","LVSWi","OPP","CPP",
+    "PCWP","EDV","ESV","LVEF","LVSWi","OPP","CPP",
     "RAP","sPAP","dPAP","mPAP","PAPI",
     "PVR_WU","PVRI_WU_m2","RVSWi",
     "ESP_SW","PE","PVA","Eff","V0_EDPVR","beta","alpha",
@@ -6891,21 +6891,21 @@ function exportCSV(){
   const ptHVal = (byId('ptH')?.value) || '';
   const ptWVal = (byId('ptW')?.value) || '';
   const lines = [hdr.join(',')].concat(all.map((r, idx)=>[
-    r.time, r.HR, to2(r.CO), to2(r.CI), to1(r.SVI), to2(r.CPO), to2(r.CPI), to2(r.CPIa),
+    csvEscape(r.time ?? ''), r.HR, to2(r.CO), to2(r.CI), to1(r.SVI), to2(r.CPO), to2(r.CPI), to2(r.CPIa),
     r.SBP, r.DBP, to1(r.MAP), to1(r.ESP), to2(r.Ea), to2(r.Ees), to2(r.VAC),
     to0(r.SVR), to0(r.SVRI),
-    to1(r.PCWP), to1(r.EDV), to1(r.ESV), to2(r.LVSWi), to1(r.OPP), to1(r.CPP),
+    to1(r.PCWP), to1(r.EDV), to1(r.ESV), (Number.isFinite(r.LVEF ?? r.EF) ? (r.LVEF ?? r.EF) : ''), to2(r.LVSWi), to1(r.OPP), to1(r.CPP),
     to1(r.RAP), to1(r.sPAP), to1(r.dPAP), to1(r.mPAP), to2(r.PAPI),
     to2(r.PVR_WU), to2(r.PVRI_WU), to2(r.RVSWi),
     to0(r.SW), to0(r.PE), to0(r.PVA), to1(r.Eff), to1(r.V0_EDPVR), to2(r.beta), (Number.isFinite(r.alpha)?r.alpha.toExponential(2):''),
-  to1(r.Lactate ?? r.Lact), to0(r.ALT), (Number.isFinite(r.pH)?r.pH.toFixed(2):''), r.OHCA?1:0, (Number.isFinite(r.creatinine)? r.creatinine : ''), (Number.isFinite(r.SvO2)? r.SvO2 : (Number.isFinite(r.svo2)? r.svo2 : '')),
-  (r.IABP_ratio !== undefined && r.IABP_ratio !== null ? String(r.IABP_ratio) : ''), (r.Impella_level !== undefined && r.Impella_level !== null ? String(r.Impella_level) : ''), to1(r.Impella_flow_Lmin), to0(r.ECMO_rpm), to1(r.ECMO_flow_Lmin),
+    to1(r.Lactate ?? r.Lact), to0(r.ALT), (Number.isFinite(r.pH)?r.pH.toFixed(2):''), r.OHCA?1:0, (Number.isFinite(r.creatinine)? r.creatinine : ''), (Number.isFinite(r.SvO2)? r.SvO2 : (Number.isFinite(r.svo2)? r.svo2 : '')),
+    (r.IABP_ratio !== undefined && r.IABP_ratio !== null ? String(r.IABP_ratio) : ''), (r.Impella_level !== undefined && r.Impella_level !== null ? String(r.Impella_level) : ''), to1(r.Impella_flow_Lmin), to0(r.ECMO_rpm), to1(r.ECMO_flow_Lmin),
     r.prior_therapy?1:0, r.mcs_for_CS?1:0, (r.devicesOn + r.drugsOn), r.devicesOn, r.inotropesOn, r.pressorsOn, to2(r.LVIS),
-    r.SCAI??'', r.SCAI_reason??'', r.SCAI_downgrade_flag??0, r.SCAI_downgrade_reason??'',
+    r.SCAI??'', csvEscape(r.SCAI_reason??''), r.SCAI_downgrade_flag??0, csvEscape(r.SCAI_downgrade_reason??''),
     ...DEV_KEYS.map(k=> r.devs[k]?1:0),
     ...Object.keys(DOSE_KEYS).map(k=> (r.doses[k]??0)),
     // metadata column: patient name (human-friendly) + patient meta
-    patientNameVal, ptAgeVal, ptSexVal, csTypeVal, ptHVal, ptWVal
+    csvEscape(patientNameVal), ptAgeVal, ptSexVal, csTypeVal, ptHVal, ptWVal
   ].join(',')));
   const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
